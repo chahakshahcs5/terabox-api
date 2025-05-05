@@ -1,0 +1,39 @@
+name: Publish NPM Package
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: check if tag is from package branch
+        id: check_tag
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          PKG_COMMIT=$(git merge-base $TAG_COMMIT origin/package)
+          
+          echo "tag commit: $TAG_COMMIT"
+          echo "pkg commit: $PKG_COMMIT"
+          
+          if [ "$TAG_COMMIT" != "$PKG_COMMIT" ]; then
+            echo "tag was not created from package branch. exiting..."
+            exit 1
+          fi
+      - name: proceed with release
+        run: echo "tag was created from package branch. proceeding..."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/actions-setup@v4
+        with:
+          version: 9
+      - run: pnpm install
+      - uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
