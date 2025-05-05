@@ -1,7 +1,7 @@
 {
     "name": "terabox-api",
     "name_ext": "TeraBox API",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "main": "api.js",
     "type": "module",
     "scripts": {
@@ -13,13 +13,13 @@
     "author": "Seiya Dev.",
     "license": "MIT",
     "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
-    "homepage": "https://github.com/seiya-dev/terabox-node#readme",
+    "homepage": "https://github.com/seiya-npm/terabox-api#readme",
     "repository": {
         "type": "git",
-        "url": "https://github.com/seiya-dev/terabox-node.git"
+        "url": "https://github.com/seiya-npm/terabox-api.git"
     },
     "bugs": {
-        "url": "https://github.com/seiya-dev/terabox-node/issues"
+        "url": "https://github.com/seiya-npm/terabox-api/issues"
     },
     "dependencies": {
         "@inquirer/input": "^2.3.0",

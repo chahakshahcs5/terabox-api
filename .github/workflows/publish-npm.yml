@@ -21,4 +21,5 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
       - uses: softprops/action-gh-release@v2
-        make_latest: false
+        with:
+          generate_release_notes: true
