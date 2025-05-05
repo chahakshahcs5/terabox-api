@@ -679,7 +679,7 @@ class TeraBoxApp {
         
         if (!res.error_code) {
             if (res.md5 !== data.hash.chunks[partseq]) {
-                throw new Error(`MD5 hash mismatch for file (part: ${res.partseq+1})`)
+                throw new Error(`MD5 hash mismatch for file (part: ${partseq+1})`)
             }
         }
         else {
