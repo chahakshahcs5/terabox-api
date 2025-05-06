@@ -6,8 +6,10 @@ import readline from 'node:readline';
 
 import input from '@inquirer/input';
 import select from '@inquirer/select';
+
 import dateFormat from 'dateformat';
 import { filesize } from 'filesize';
+
 import YAML from 'yaml';
 
 async function delay(ms){
@@ -360,7 +362,7 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
             [Symbol.toStringTag]: 'Blob',
             size: end-start+1,
             stream() {
-                return chunk
+                return chunk;
             }
         }
         
