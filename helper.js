@@ -358,7 +358,7 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
         const chunk = fs.createReadStream(filePath, {start, end});
         const blob = {
             type: 'application/octet-stream',
-            name: 'blob',
+            name: 'file',
             [Symbol.toStringTag]: 'Blob',
             size: end-start+1,
             stream() {
