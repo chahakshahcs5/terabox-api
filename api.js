@@ -1037,6 +1037,7 @@ class TeraBoxApp {
         formData.append('vip', 2); // this.params.vip_type
         formData.append('sign', signb); // base64 sign from getHomeInfo
         formData.append('timestamp', Math.round(Date.now()/1000));
+        formData.append('need_speed', '1'); // Premium speed?..
         formData.append('bdstoken', this.data.bdstoken);
         
         try{
