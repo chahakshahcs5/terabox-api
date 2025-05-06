@@ -644,6 +644,7 @@ class TeraBoxApp {
             // type: 'tmpfile',
             path: makeRemoteFPath(data.remote_dir, data.file),
             uploadid: data.upload_id,
+            // uploadsign: 0,
             partseq: partseq,
         });
         
@@ -683,7 +684,7 @@ class TeraBoxApp {
             }
         }
         else {
-            let err = new Error(`upload ${res.error_code}`)
+            let err = new Error(`Upload failed, Error Code #${res.error_code}`)
             err.data = res;
             throw err
         }
