@@ -297,6 +297,7 @@ class TeraBoxApp {
     async getQuota(){
         const url = new URL(this.params.whost + '/api/quota');
         url.search = new URLSearchParams({
+            checkexpire: 1,
             checkfree: 1,
         });
         
@@ -489,14 +490,33 @@ class TeraBoxApp {
         // formData.append('target_path', data.remote_dir);
         formData.append('autoinit', 1);
         formData.append('size', data.size);
-        formData.append('block_list', JSON.stringify(data.hash.chunks));
+        formData.append('file_limit_switch_v34', 'true');
+        formData.append('block_list', '[]');
         formData.append('rtype', 2);
+        
         if(data.upload_id && typeof data.upload_id == 'string' && data.upload_id != ''){
             formData.append('uploadid', data.upload_id);
         }
-        formData.append('content-md5', data.hash.file);
-        formData.append('slice-md5', data.hash.slice);
-        formData.append('content-crc32', data.hash.crc32);
+        
+        if(!data.skip_hash){
+            formData.append('content-md5', data.hash.file);
+            formData.append('slice-md5', data.hash.slice);
+            formData.append('content-crc32', data.hash.crc32);
+        }
+        
+        if(data.skip_hash){
+            const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761']
+            
+            if(data.size > 4 * 1024 * 1024){
+                predefinedHash.push('a5fc157d78e6ad1c7e114b056c92821e');
+            }
+            
+            formData.set('block_list', JSON.stringify(predefinedHash));
+        }
+        else{
+            formData.set('block_list', JSON.stringify(data.hash.chunks));
+        }
+        
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
@@ -679,6 +699,7 @@ class TeraBoxApp {
         const res = await req.body.json();
         
         if (!res.error_code) {
+            // todo make skip hash check if data.skip_hash === true;
             if (res.md5 !== data.hash.chunks[partseq]) {
                 throw new Error(`MD5 hash mismatch for file (part: ${partseq+1})`)
             }
@@ -797,6 +818,12 @@ class TeraBoxApp {
         // For Copy same as move
         // + "ondup": newcopy, overwrite (optional, skip by default)
         // For rename [{"id":1111,"path":"/dir1/src.bin","newname":"myfile2.bin"}]
+        
+        // operation - copy (file copy), move (file movement), rename (file renaming), and delete (file deletion)
+        // opera=copy: filelist: [{"path":"/hello/test.mp4","dest":"","newname":"test.mp4"}]
+        // opera=move: filelist: [{"path":"/test.mp4","dest":"/test_dir","newname":"test.mp4"}]
+        // opera=rename: filelist：[{"path":"/hello/test.mp4","newname":"test_one.mp4"}]
+        // opera=delete: filelist: ["/test.mp4"]
         
         const formData = new FormUrlEncoded();
         formData.append('filelist', JSON.stringify(fmparams));
