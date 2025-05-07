@@ -630,13 +630,13 @@ class TeraBoxApp {
     }
     
     async uploadChunk(data, partseq, chunk, onBodySentHandler, externalAbort) {
-        // preconfig request
+        // extra abort signal
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
+        // timeout abort signal
         const timeoutAborter = new AbortController;
-        const timeoutId = setTimeout(() => {
-            timeoutAborter.abort();
-        }, this.TERABOX_TIMEOUT);
-        const undiciInterceptor = (dispatch) => {
+        const timeoutId = setTimeout(() => { timeoutAborter.abort(); }, this.TERABOX_TIMEOUT);
+        // custom dispatcher
+        const dispatcher = new Agent().compose((dispatch) => {
             class undiciInterceptorBody extends DecoratorHandler {
                 onBodySent(chunk) {
                     let chunkSize = chunk.length;
@@ -653,8 +653,7 @@ class TeraBoxApp {
             return function InterceptedDispatch(opts, handler) {
                 return dispatch(opts, new undiciInterceptorBody(handler));
             };
-        };
-        const dispatcher = new Agent().compose(undiciInterceptor);
+        });
         // --
         
         const url = new URL(`${this.params.uhost}/rest/2.0/pcs/superfile2`);
