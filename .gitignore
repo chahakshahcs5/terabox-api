@@ -7,3 +7,4 @@ testapp*
 *.pdf
 *.txt
 .vscode
+*.patch
