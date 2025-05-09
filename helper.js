@@ -333,7 +333,7 @@ function printProgressLog(prepText, sentData, fsize){
     readline.clearLine(process.stdout, 1);
 }
 
-async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbort) {
+async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbort) {
     const splitSize = getChunkSize(data.size);
     const start = partSeq * splitSize;
     const end = Math.min(start + splitSize, data.size) - 1;
@@ -345,7 +345,6 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
         }
         uploadData.all += chunkSize;
         uploadData.parts[partSeq] += chunkSize;
-        
         printProgressLog('Uploading', uploadData, data.size);
     }
     
@@ -354,17 +353,7 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
             break;
         }
         
-        uploadData.parts[partSeq] = 0;
-        const chunk = fs.createReadStream(filePath, {start, end});
-        const blob = {
-            type: 'application/octet-stream',
-            name: 'file',
-            [Symbol.toStringTag]: 'Blob',
-            size: end-start+1,
-            stream() {
-                return chunk;
-            }
-        }
+        const blob = file.slice(start, end+1);
         
         try{
             const r = await app.uploadChunk(data, partSeq, blob, onBodySentHandler, externalAbort);
@@ -419,8 +408,11 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
     const externalAbortController = new AbortController();
     uploadData.maxTries = maxTries;
     
+    const file = await fs.openAsBlob(filePath);
+    
     if(data.uploaded.filter(pStatus => pStatus == false).length > 0){
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
+            uploadData.parts[partSeq] = 0;
             if(data.uploaded[partSeq]){
                 const chunkSize = partSeq < totalChunks - 1 ? splitSize : lastChunkSize;
                 uploadData.parts[partSeq] = splitSize;
@@ -430,7 +422,7 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(!data.uploaded[partSeq]){
                 tasks.push(() => {
-                    return uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbortController.signal);
+                    return uploadChunkTask(app, data, file, partSeq, uploadData, externalAbortController.signal);
                 });
             }
         }

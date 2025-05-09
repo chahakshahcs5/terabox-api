@@ -629,7 +629,7 @@ class TeraBoxApp {
         }
     }
     
-    async uploadChunk(data, partseq, chunk, onBodySentHandler, externalAbort) {
+    async uploadChunk(data, partseq, blob, onBodySentHandler, externalAbort) {
         // extra abort signal
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
         // timeout abort signal
@@ -672,7 +672,7 @@ class TeraBoxApp {
         }
         
         const formData = new FormData();
-        formData.append('file', chunk);
+        formData.append('file', blob, 'blob');
 
         const req = await dispatcher.request({
             origin: url.origin,
