@@ -61,9 +61,31 @@ function signDownload(s1, s2) {
     return Buffer.from(result).toString('base64');
 }
 
+function decryptMd5(md5) {
+    if (md5.length !== 32) return md5;
+    
+    const restoredHexChar = (md5.charCodeAt(9) - 'g'.charCodeAt(0)).toString(16);
+    const o = md5.slice(0, 9) + restoredHexChar + md5.slice(10);
+    
+    let n = '';
+    for (let i = 0; i < o.length; i++) {
+        const orig = parseInt(o[i], 16) ^ (i & 15);
+        n += orig.toString(16);
+    }
+    
+    const e =
+        n.slice(8, 16) + // original e[0..7]
+        n.slice(0, 8) +  // original e[8..15]
+        n.slice(24, 32) + // original e[16..23]
+        n.slice(16, 24);  // original e[24..31]
+    
+    return e;
+}
+
 class TeraBoxApp {
     FormUrlEncoded = FormUrlEncoded;
     SignDownload = signDownload;
+    DecryptMd5 = decryptMd5;
     TERABOX_TIMEOUT = 10000;
     
     data = {
@@ -629,32 +651,10 @@ class TeraBoxApp {
         }
     }
     
-    async uploadChunk(data, partseq, blob, onBodySentHandler, externalAbort) {
-        // extra abort signal
-        externalAbort = externalAbort ? externalAbort : new AbortController().signal;
-        // timeout abort signal
+    async uploadChunk(data, partseq, blob, reqHandler, externalAbort) {
         const timeoutAborter = new AbortController;
         const timeoutId = setTimeout(() => { timeoutAborter.abort(); }, this.TERABOX_TIMEOUT);
-        // custom dispatcher
-        const dispatcher = new Agent().compose((dispatch) => {
-            class undiciInterceptorBody extends DecoratorHandler {
-                onBodySent(chunk) {
-                    let chunkSize = chunk.length;
-                    const chunckTxt = (new TextDecoder()).decode(chunk);
-                    if(chunckTxt.match(/^------formdata-undici-/)){
-                        chunkSize = -1;
-                    }
-                    timeoutId.refresh();
-                    if (onBodySentHandler){
-                        onBodySentHandler(chunkSize);
-                    }
-                }
-            }
-            return function InterceptedDispatch(opts, handler) {
-                return dispatch(opts, new undiciInterceptorBody(handler));
-            };
-        });
-        // --
+        externalAbort = externalAbort ? externalAbort : new AbortController().signal;
         
         const url = new URL(`${this.params.uhost}/rest/2.0/pcs/superfile2`);
         url.search = new URLSearchParams({
@@ -673,10 +673,8 @@ class TeraBoxApp {
         
         const formData = new FormData();
         formData.append('file', blob, 'blob');
-
-        const req = await dispatcher.request({
-            origin: url.origin,
-            path: `${url.pathname}${url.search}`,
+        
+        const req = await request(url, {
             method: 'POST',
             body: formData,
             headers: {
@@ -698,8 +696,7 @@ class TeraBoxApp {
         const res = await req.body.json();
         
         if (!res.error_code) {
-            // todo make skip hash check if data.skip_hash === true;
-            if (res.md5 !== data.hash.chunks[partseq]) {
+            if (data.hash.chunks[partseq] && res.md5 !== data.hash.chunks[partseq]) {
                 throw new Error(`MD5 hash mismatch for file (part: ${partseq+1})`)
             }
         }
@@ -790,6 +787,11 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
+            if(rdata.md5){
+                rdata.emd5 = rdata.md5;
+                rdata.md5 = this.DecryptMd5(rdata.emd5);
+            }
+            
             return rdata;
         }
         catch (error) {
