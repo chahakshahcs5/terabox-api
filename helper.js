@@ -439,7 +439,7 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
         return upload_status;
     }
     
-    return true;
+    return {ok: true, data};
 }
 
 function unwrapErrorMessage(err) {
