@@ -61,6 +61,18 @@ function signDownload(s1, s2) {
     return Buffer.from(result).toString('base64');
 }
 
+function checkMd5val(md5){
+    if(typeof md5 !== 'string') return false;
+    return /^[a-f0-9]{32}$/.test(md5);
+}
+
+function checkMd5arr(arr) {
+    if (!Array.isArray(arr)) return false;
+    return arr.every(item => {
+        return checkMd5val(item);
+    });
+}
+
 function decryptMd5(md5) {
     if (md5.length !== 32) return md5;
     
@@ -85,6 +97,8 @@ function decryptMd5(md5) {
 class TeraBoxApp {
     FormUrlEncoded = FormUrlEncoded;
     SignDownload = signDownload;
+    CheckMd5Val = checkMd5val;
+    CheckMd5Arr = checkMd5arr;
     DecryptMd5 = decryptMd5;
     TERABOX_TIMEOUT = 10000;
     
@@ -520,13 +534,18 @@ class TeraBoxApp {
             formData.append('uploadid', data.upload_id);
         }
         
-        if(!data.skip_hash){
+        // check if has correct md5 values
+        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
             formData.append('content-md5', data.hash.file);
             formData.append('slice-md5', data.hash.slice);
+        }
+        
+        // check crc32int and ignore field for crc32 = 0
+        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 > 0 && data.hash.crc32 <= 0xFFFFFFFF){
             formData.append('content-crc32', data.hash.crc32);
         }
         
-        if(data.skip_hash){
+        if(!this.CheckMd5Arr(data.hash.chunks)){
             const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761']
             
             if(data.size > 4 * 1024 * 1024){
