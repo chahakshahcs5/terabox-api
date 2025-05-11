@@ -715,7 +715,7 @@ class TeraBoxApp {
         const res = await req.body.json();
         
         if (!res.error_code) {
-            if (data.hash.chunks[partseq] && res.md5 !== data.hash.chunks[partseq]) {
+            if (this.CheckMd5Val(data.hash.chunks[partseq]) && res.md5 !== data.hash.chunks[partseq]){
                 throw new Error(`MD5 hash mismatch for file (part: ${partseq+1})`)
             }
         }
