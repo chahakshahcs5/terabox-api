@@ -1,4 +1,4 @@
-import { DecoratorHandler, Agent, FormData, Client, buildConnector, request } from 'undici';
+import { FormData, Client, buildConnector, request } from 'undici';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { filesize } from 'filesize';
 
