@@ -716,11 +716,15 @@ class TeraBoxApp {
         
         if (!res.error_code) {
             if (this.CheckMd5Val(data.hash.chunks[partseq]) && res.md5 !== data.hash.chunks[partseq]){
-                throw new Error(`MD5 hash mismatch for file (part: ${partseq+1})`)
+                const md5Err = [
+                    `MD5 hash mismatch for file (part: ${partseq+1})`,
+                    `[Actual MD5:${data.hash.chunks[partseq]} / Got MD5:${res.md5}]`
+                ];
+                throw new Error(md5Err.join('\n\t'));
             }
         }
         else {
-            let err = new Error(`Upload failed, Error Code #${res.error_code}`)
+            let err = new Error(`Upload failed, Error Code #${res.error_code}`);
             err.data = res;
             throw err
         }
