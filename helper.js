@@ -4,6 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import readline from 'node:readline';
 
+import crc32 from 'crc-32';
+
 import input from '@inquirer/input';
 import select from '@inquirer/select';
 
@@ -169,43 +171,13 @@ function getChunkSize(fileSize, is_vip = true) {
     return limitSizes.at(-1) * MiB;
 }
 
-const crcTable = (() => {
-    const table = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-        let c = n;
-        for (let k = 0; k < 8; k++) {
-            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-        }
-        table[n] = c;
-    }
-    return table;
-})();
-
-class CryptoCreateHashCRC {
-    constructor() {
-        this.crcHash = 0xFFFFFFFF;
-    }
-    update(data) {
-        for (let i = 0, len = data.length; i < len; i++) {
-            this.crcHash = (this.crcHash >>> 8) ^ crcTable[(this.crcHash ^ data[i]) & 0xFF];
-        }
-    }
-    digest(type = 'dec') {
-        const finalCrcHash = (this.crcHash ^ 0xFFFFFFFF) >>> 0;
-        if (type === 'hex') {
-            return finalCrcHash.toString(16).toUpperCase().padStart(8, '0');
-        }
-        return finalCrcHash;
-    }
-}
-
 async function hashFile(filePath, skipChunks) {
     const stat = fs.statSync(filePath);
     const sliceSize = 256 * 1024;
     const splitSize = getChunkSize(stat.size);
     const hashedData = newProgressData();
     
-    const crcHash = new CryptoCreateHashCRC();
+    let crcHash = 0;
     const fileHash = crypto.createHash('md5');
     const sliceHash = crypto.createHash('md5');
     let chunkHash = crypto.createHash('md5');
@@ -225,7 +197,8 @@ async function hashFile(filePath, skipChunks) {
     try {
         for await (const data of stream) {
             fileHash.update(data);
-            crcHash.update(data);
+            
+            crcHash = crc32.buf(data, crcHash);
             
             let offset = 0;
             while (offset < data.length) {
@@ -264,7 +237,7 @@ async function hashFile(filePath, skipChunks) {
             printProgressLog('Hashing', hashedData, stat.size);
         }
         
-        hashData.crc32 = crcHash.digest('dec');
+        hashData.crc32 = crcHash >>> 0;
         hashData.slice = sliceHash.digest('hex');
         hashData.file = fileHash.digest('hex');
         
