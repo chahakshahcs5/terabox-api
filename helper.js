@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-
 import path from 'node:path';
 import crypto from 'node:crypto';
 import readline from 'node:readline';
+import { Readable } from 'node:stream';
 
 import crc32 from 'crc-32';
 
@@ -313,7 +313,7 @@ function printProgressLog(prepText, sentData, fsize){
     readline.clearLine(process.stdout, 1);
 }
 
-async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbort) {
+async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbort) {
     const splitSize = getChunkSize(data.size);
     const start = partSeq * splitSize;
     const end = Math.min(start + splitSize, data.size) - 1;
@@ -325,13 +325,22 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
         printProgressLog('Uploading', uploadData, data.size);
     }
     
+    const blob_size = end + 1 - start;
+    let blob;
+    
+    if(data.size > 4 * Math.pow(1024, 3)){
+        const chunk = fs.createReadStream(filePath, {start, end});
+        blob = await new Response(Readable.toWeb(chunk)).blob();
+    }
+    else{
+        const file = await fs.openAsBlob(filePath);
+        blob = file.slice(start, end+1);
+    }
+    
     for (let i = 0; i < maxTries; i++) {
         if (externalAbort.aborted) {
             break;
         }
-        
-        const blob = file.slice(start, end+1);
-        const blob_size = end + 1 - start;
         
         try{
             const res = await app.uploadChunk(data, partSeq, blob, null, externalAbort);
@@ -386,8 +395,6 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
     const externalAbortController = new AbortController();
     uploadData.maxTries = maxTries;
     
-    const file = await fs.openAsBlob(filePath);
-    
     if(data.uploaded.filter(pStatus => pStatus == false).length > 0){
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             uploadData.parts[partSeq] = 0;
@@ -400,15 +407,17 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(!data.uploaded[partSeq]){
                 tasks.push(() => {
-                    return uploadChunkTask(app, data, file, partSeq, uploadData, externalAbortController.signal);
+                    return uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbortController.signal);
                 });
             }
         }
         
         const cMaxTasks = totalChunks > maxTasks ? maxTasks : totalChunks;
         const upload_status = await runWithConcurrencyLimit(data, tasks, cMaxTasks);
-        console.log(); // reset stdout after process.write
+        
+        console.log();
         externalAbortController.abort();
+        
         return upload_status;
     }
     
