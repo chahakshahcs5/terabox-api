@@ -100,7 +100,7 @@ class TeraBoxApp {
     CheckMd5Val = checkMd5val;
     CheckMd5Arr = checkMd5arr;
     DecryptMd5 = decryptMd5;
-    TERABOX_TIMEOUT = 10000;
+    TERABOX_TIMEOUT = 60000;
     
     data = {
         csrf: '',
