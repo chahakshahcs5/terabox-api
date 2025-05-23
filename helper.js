@@ -326,16 +326,8 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
     }
     
     const blob_size = end + 1 - start;
-    let blob;
-    
-    if(start + blob_size > 4 * Math.pow(1024, 3)){
-        const chunk = fs.createReadStream(filePath, {start, end});
-        blob = await new Response(Readable.toWeb(chunk)).blob();
-    }
-    else{
-        const file = await fs.openAsBlob(filePath);
-        blob = file.slice(start, end+1);
-    }
+    const chunk = fs.createReadStream(filePath, {start, end});
+    const blob = await new Response(Readable.toWeb(chunk)).blob();
     
     for (let i = 0; i < maxTries; i++) {
         if (externalAbort.aborted) {
