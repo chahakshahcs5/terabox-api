@@ -5,7 +5,6 @@ import readline from 'node:readline';
 import { Readable } from 'node:stream';
 
 import crc32 from 'crc-32';
-import dateFormat from 'dateformat';
 import { filesize } from 'filesize';
 
 function getChunkSize(fileSize, is_vip = true) {
