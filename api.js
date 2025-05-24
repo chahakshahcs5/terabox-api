@@ -606,6 +606,11 @@ class TeraBoxApp {
         formData.append('rtype', 2);
         formData.append('mode', 1);
         
+        if(typeof data.hash.crc32 !== 'number' || !Number.isInteger(data.hash.crc32) ||
+           data.hash.crc32 < 0 || value > 0xFFFFFFFF){
+            formData.delete('content-crc32');
+        }
+        
         if(!Array.isArray(data.hash.chunks)){
             // use unsafe rapid upload if we don't have chunks hash
             formData.delete('block_list');
