@@ -123,8 +123,11 @@ class TeraBoxApp {
         ua: 'terabox;1.37.0.7;PC;PC-Windows;10.0.22631;WindowsTeraBox',
         cookie: '',
         auth: {},
+        account_name: '',
         is_vip: true,
         vip_type: 2,
+        space_used: 0,
+        space_total: 2 * Math.pow(1024, 3),
         space_available: 2 * Math.pow(1024, 3),
         cursor: 'null',
     };
@@ -330,6 +333,9 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
+            if(rdata.errno == 0){
+                this.params.account_name = rdata.data.display_name;
+            }
             return rdata;
         }
         catch (error) {
@@ -361,6 +367,8 @@ class TeraBoxApp {
             if(rdata.errno == 0){
                 rdata.available = rdata.total - rdata.used;
                 this.params.space_available = rdata.available;
+                this.params.space_total = rdata.total;
+                this.params.space_used = rdata.used;
             }
             return rdata;
         }
