@@ -121,15 +121,22 @@ class TeraBoxApp {
         },
         ver_android: '3.40.0',
         ua: 'terabox;1.37.0.7;PC;PC-Windows;10.0.22631;WindowsTeraBox',
-        auth: '',
+        cookie: '',
+        auth: {},
         is_vip: true,
         vip_type: 2,
         space_available: 2 * Math.pow(1024, 3),
         cursor: 'null',
     };
     
-    constructor(ndus) {
-        this.params.auth = `lang=${this.params.lang}${ndus?'; ndus='+ndus:''}`;
+    constructor(authData, authType = 'ndus') {
+        this.params.cookie = `lang=${this.params.lang}`;
+        if(authType == 'ndus'){
+            this.params.cookie += authData ? '; ndus=' + authData : '';
+        }
+        else{
+            throw new Error('initTBApp', { cause: 'AuthType Not Supported!' });
+        }
     }
     
     async updateAppData(customPath){
@@ -139,21 +146,21 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers:{
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT * 2),
             });
             
             if(req.headers['set-cookie']){
                 const cJar = new CookieJar();
-                this.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
+                this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
                 if(typeof req.headers['set-cookie'] == 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
                     cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
-                this.params.auth = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
+                this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
             
             const rdata = await req.body.text();
@@ -215,7 +222,7 @@ class TeraBoxApp {
             const options = {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                     ...req_headers,
                 },
                 ...reqm_options,
@@ -226,14 +233,14 @@ class TeraBoxApp {
             
             if(save_cookies && req.headers['set-cookie']){
                 const cJar = new CookieJar();
-                this.params.auth.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
+                this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
                 if(typeof req.headers['set-cookie'] == 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
-                this.params.auth = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
+                this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
             
             const rdata = await req.body.json();
@@ -258,7 +265,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -285,7 +292,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -313,7 +320,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -341,7 +348,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -369,7 +376,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -408,7 +415,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -440,7 +447,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -469,7 +476,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -503,7 +510,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -575,7 +582,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -634,7 +641,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -657,7 +664,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -703,7 +710,7 @@ class TeraBoxApp {
             body: formData,
             headers: {
                 'User-Agent': this.params.ua,
-                'Cookie': this.params.auth,
+                'Cookie': this.params.cookie,
             },
             signal: AbortSignal.any([
                 externalAbort,
@@ -757,7 +764,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -805,7 +812,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -864,7 +871,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -897,7 +904,7 @@ class TeraBoxApp {
                 method: 'GET',
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 dispatcher: client,
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
@@ -940,7 +947,7 @@ class TeraBoxApp {
                 method: 'GET',
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 dispatcher: client,
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
@@ -985,7 +992,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -1031,7 +1038,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -1059,7 +1066,7 @@ class TeraBoxApp {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -1104,7 +1111,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -1137,7 +1144,7 @@ class TeraBoxApp {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
@@ -1170,7 +1177,7 @@ class TeraBoxApp {
                 body: formData.str(),
                 headers: {
                     'User-Agent': this.params.ua,
-                    'Cookie': this.params.auth,
+                    'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
