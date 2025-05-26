@@ -168,7 +168,7 @@ function printProgressLog(prepText, sentData, fsize){
     readline.clearLine(process.stdout, 1);
 }
 
-async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbort) {
+async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbort) {
     const splitSize = getChunkSize(data.size);
     const start = partSeq * splitSize;
     const end = Math.min(start + splitSize, data.size) - 1;
@@ -181,8 +181,9 @@ async function uploadChunkTask(app, data, filePath, partSeq, uploadData, externa
     }
     
     const blob_size = end + 1 - start;
-    const chunk = fs.createReadStream(filePath, {start, end});
-    const blob = await new Response(Readable.toWeb(chunk)).blob();
+    const buffer = Buffer.alloc(blob_size);
+    await file.read(buffer, 0, blob_size, start);
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
     
     for (let i = 0; i < maxTries; i++) {
         if (externalAbort.aborted) {
@@ -251,10 +252,11 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
             }
         }
         
+        const file = await fs.promises.open(filePath, 'r');
         for (let partSeq = 0; partSeq < totalChunks; partSeq++) {
             if(!data.uploaded[partSeq]){
                 tasks.push(() => {
-                    return uploadChunkTask(app, data, filePath, partSeq, uploadData, externalAbortController.signal);
+                    return uploadChunkTask(app, data, file, partSeq, uploadData, externalAbortController.signal);
                 });
             }
         }
@@ -264,6 +266,7 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
         
         console.log();
         externalAbortController.abort();
+        await file.close();
         
         return upload_status;
     }
