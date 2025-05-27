@@ -555,8 +555,8 @@ class TeraBoxApp {
             formData.append('slice-md5', data.hash.slice);
         }
         
-        // check crc32int and ignore field for crc32 = 0
-        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 > 0 && data.hash.crc32 <= 0xFFFFFFFF){
+        // check crc32int and ignore field for crc32 out of range
+        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
             formData.append('content-crc32', data.hash.crc32);
         }
         
