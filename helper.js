@@ -219,6 +219,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
             const doRetry = i+1 != maxTries ? `, retry #${i+1}` : '';
             
             process.stdout.write(uplFailedMsg1 + uplFailedMsg2 + doRetry + '...\n');
+            uploadLog(0);
         }
     }
     
