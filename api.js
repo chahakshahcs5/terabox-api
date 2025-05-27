@@ -625,8 +625,7 @@ class TeraBoxApp {
             throw new Error('rapidUpload', { cause: 'Bad MD5 Slice Hash or MD5 File Hash' });
         }
         
-        if(typeof data.hash.crc32 !== 'number' || !Number.isInteger(data.hash.crc32) ||
-           data.hash.crc32 < 0 || value > 0xFFFFFFFF){
+        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || value > 0xFFFFFFFF){
             formData.delete('content-crc32');
         }
         
@@ -799,9 +798,22 @@ class TeraBoxApp {
         // formData.append('isdir', 0);
         formData.append('size', data.size);
         formData.append('isdir', 0);
+        
+        // check if has correct md5 values
+        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
+            formData.append('content-md5', data.hash.file);
+            formData.append('slice-md5', data.hash.slice);
+        }
+        
+        // check crc32int and ignore field for crc32 out of range
+        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
+            formData.append('content-crc32', data.hash.crc32);
+        }
+        
         formData.append('block_list', JSON.stringify(data.hash.chunks));;
         formData.append('uploadid', data.upload_id);
         formData.append('rtype', 2);
+        
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         // formData.append('zip_quality', '');
@@ -809,6 +821,8 @@ class TeraBoxApp {
         // formData.append('is_revision', 0);
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
+        
+        
         
         const api_prefixurl = data.is_teratransfer ? 'anno' : '';
         const url = new URL(this.params.whost + `/api/${api_prefixurl}create`);
