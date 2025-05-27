@@ -625,7 +625,7 @@ class TeraBoxApp {
             throw new Error('rapidUpload', { cause: 'Bad MD5 Slice Hash or MD5 File Hash' });
         }
         
-        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || value > 0xFFFFFFFF){
+        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || data.hash.crc32 > 0xFFFFFFFF){
             formData.delete('content-crc32');
         }
         
