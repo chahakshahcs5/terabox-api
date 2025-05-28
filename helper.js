@@ -119,14 +119,7 @@ async function runWithConcurrencyLimit(data, tasks, limit) {
     const runTask = async () => {
         while (index < tasks.length && !failed) {
             const currentIndex = index++;
-            const result = await tasks[currentIndex]();
-            if(result.done){
-                data.uploaded[result.part] = true;
-                result.uploadLog(result.part_size);
-            }
-            if(result.done && !data.hash.chunks[result.part]){
-                data.hash.chunks[result.part] = result.res.md5;
-            }
+            await tasks[currentIndex]();
         }
     };
     
@@ -154,10 +147,11 @@ function printProgressLog(prepText, sentData, fsize){
     const uploadSpeed = sentData.all * 1000 / (Date.now() - sentData.start);
     const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true, separator: '.'}) + '/s';
     
-    const remainingTime = Math.max((fsize - uploadedBytesSum) / uploadSpeed, 0);
-    const remainingSeconds = Math.floor(remainingTime % 60);
-    const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
-    const remainingHours = Math.floor(remainingTime / 3600);
+    const remainingTimeInt = Math.max((fsize - uploadedBytesSum) / uploadSpeed, 0);
+    const remainingTimeSec = remainingTimeInt > 99*3636+35 ? 99*3636+35 : remainingTimeInt;
+    const remainingSeconds = Math.floor(remainingTimeSec % 60);
+    const remainingMinutes = Math.floor((remainingTimeSec % 3600) / 60);
+    const remainingHours = Math.floor(remainingTimeSec / 3600);
     const [remH, remM, remS] = [remainingHours, remainingMinutes, remainingSeconds].map(t => String(t).padStart(2, '0'));
     const remainingTimeStr = `${remH}h${remM}m${remS}s left...`;
     
@@ -166,6 +160,13 @@ function printProgressLog(prepText, sentData, fsize){
     const uploadStatusArr = [percentageFStr, uploadSpeedStr, remainingTimeStr];
     process.stdout.write(`${prepText}: ${uploadStatusArr.join(', ')}`);
     readline.clearLine(process.stdout, 1);
+}
+
+function md5MismatchText(hash1, hash2, partnum, total){
+    return [
+        `MD5 hash mismatch for file (part: ${partnum} of ${total})`,
+        `[Actual MD5:${hash1} / Got MD5:${hash2}]`,
+    ];
 }
 
 async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbort) {
@@ -192,20 +193,34 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
         
         try{
             const res = await app.uploadChunk(data, partSeq, blob, null, externalAbort);
+            const chunkMd5 = data.hash.chunks[partSeq];
             
-            if (app.CheckMd5Val(data.hash.chunks[partseq]) && res.md5 !== data.hash.chunks[partseq]){
-                const md5Err = [
-                    `MD5 hash mismatch for file (part: ${partseq+1} of ${data.hash.chunks.length})`,
-                    `[Actual MD5:${data.hash.chunks[partseq]} / Got MD5:${res.md5}]`
-                ];
+            // check if we have chunks hash
+            if (app.CheckMd5Val(chunkMd5) && res.md5 !== chunkMd5){
+                const md5Err = md5MismatchText(chunkMd5, res.md5, partSeq+1, data.hash.chunks.length)
                 throw new Error(md5Err.join('\n\t'));
             }
             
-            if(!app.CheckMd5Val(data.hash.chunks[partseq])){
-                // TODO: option to compare chunk hash after upload, if chunks not hashed
+            // check if we don't have chunk hash and data.hash_check not set to false
+            const skipChunkHashCheck = typeof data.hash_check === 'boolean' && data.hash_check === false;
+            if(!app.CheckMd5Val(chunkMd5) && !skipChunkHashCheck){
+                const calcChunkMd5 = crypto.createHash('md5').update(buffer).digest('hex');
+                if(calcChunkMd5 != res.md5){
+                    const md5Err = md5MismatchText(calcChunkMd5, res.md5, partSeq+1, data.hash.chunks.length)
+                    throw new Error(md5Err.join('\n\t'));
+                }
             }
             
-            return { part: partSeq, part_size: blob_size, uploadLog, res, done: true };
+            // update chunkMd5 to res.md5
+            if(app.CheckMd5Val(res.md5) && chunkMd5 !== res.md5){
+                data.hash.chunks[partSeq] = res.md5;
+            }
+            
+            // log uploaded
+            data.uploaded[partSeq] = true;
+            uploadLog(blob_size);
+            
+            return true;
             break;
         }
         catch(error){
@@ -275,6 +290,7 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
             }
         }
         
+        printProgressLog('Uploading', uploadData, data.size);
         const cMaxTasks = totalChunks > maxTasks ? maxTasks : totalChunks;
         const upload_status = await runWithConcurrencyLimit(data, tasks, cMaxTasks);
         

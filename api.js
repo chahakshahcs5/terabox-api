@@ -740,9 +740,9 @@ class TeraBoxApp {
         const res = await req.body.json();
         
         if (res.error_code) {
-            let err = new Error(`Upload failed, Error Code #${res.error_code}`);
-            err.data = res;
-            throw err;
+            const uploadError = new Error(`Upload failed! Error Code #${res.error_code}`);
+            uploadError.data = res;
+            throw uploadError;
         }
         
         return res;
@@ -840,8 +840,15 @@ class TeraBoxApp {
             
             const rdata = await req.body.json();
             if(rdata.md5){
+                // encrypted etag
                 rdata.emd5 = rdata.md5;
+                // decrypted etag (without chunk count)
                 rdata.md5 = this.DecryptMd5(rdata.emd5);
+                // set custom etag
+                rdata.etag = rdata.md5;
+                if(data.hash.chunks.length > 1){
+                    rdata.etag += '-' + data.hash.chunks.length;
+                }
             }
             
             return rdata;
