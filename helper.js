@@ -144,7 +144,7 @@ function printProgressLog(prepText, sentData, fsize){
     const filesizeBytesStr = filesize(fsize, {standard: 'iec', round: 3, pad: true});
     const uploadedBytesFStr = `(${uploadedBytesStr}/${filesizeBytesStr})`;
     
-    const uploadSpeed = sentData.all * 1000 / (Date.now() - sentData.start);
+    const uploadSpeed = sentData.all * 1000 / (Date.now() - sentData.start) || 0;
     const uploadSpeedStr = filesize(uploadSpeed, {standard: 'si', round: 2, pad: true, separator: '.'}) + '/s';
     
     const remainingTimeInt = Math.max((fsize - uploadedBytesSum) / uploadSpeed, 0);
