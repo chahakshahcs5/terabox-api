@@ -560,6 +560,7 @@ class TeraBoxApp {
             formData.append('content-crc32', data.hash.crc32);
         }
         
+        // check chunks hash
         if(!this.CheckMd5Arr(data.hash.chunks)){
             const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761']
             
@@ -622,7 +623,8 @@ class TeraBoxApp {
         formData.append('mode', 1);
         
         if(!this.CheckMd5Val(data.hash.slice) || !this.CheckMd5Val(data.hash.file)){
-            throw new Error('rapidUpload', { cause: 'Bad MD5 Slice Hash or MD5 File Hash' });
+            const badMD5 = new Error('Bad MD5 Slice Hash or MD5 File Hash');
+            throw new Error('rapidUpload', { cause: badMD5 });
         }
         
         if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || data.hash.crc32 > 0xFFFFFFFF){
@@ -737,19 +739,10 @@ class TeraBoxApp {
         
         const res = await req.body.json();
         
-        if (!res.error_code) {
-            if (this.CheckMd5Val(data.hash.chunks[partseq]) && res.md5 !== data.hash.chunks[partseq]){
-                const md5Err = [
-                    `MD5 hash mismatch for file (part: ${partseq+1})`,
-                    `[Actual MD5:${data.hash.chunks[partseq]} / Got MD5:${res.md5}]`
-                ];
-                throw new Error(md5Err.join('\n\t'));
-            }
-        }
-        else {
+        if (res.error_code) {
             let err = new Error(`Upload failed, Error Code #${res.error_code}`);
             err.data = res;
-            throw err
+            throw err;
         }
         
         return res;
@@ -821,8 +814,6 @@ class TeraBoxApp {
         // formData.append('is_revision', 0);
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
-        
-        
         
         const api_prefixurl = data.is_teratransfer ? 'anno' : '';
         const url = new URL(this.params.whost + `/api/${api_prefixurl}create`);

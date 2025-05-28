@@ -192,6 +192,19 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
         
         try{
             const res = await app.uploadChunk(data, partSeq, blob, null, externalAbort);
+            
+            if (app.CheckMd5Val(data.hash.chunks[partseq]) && res.md5 !== data.hash.chunks[partseq]){
+                const md5Err = [
+                    `MD5 hash mismatch for file (part: ${partseq+1} of ${data.hash.chunks.length})`,
+                    `[Actual MD5:${data.hash.chunks[partseq]} / Got MD5:${res.md5}]`
+                ];
+                throw new Error(md5Err.join('\n\t'));
+            }
+            
+            if(!app.CheckMd5Val(data.hash.chunks[partseq])){
+                // TODO: option to compare chunk hash after upload, if chunks not hashed
+            }
+            
             return { part: partSeq, part_size: blob_size, uploadLog, res, done: true };
             break;
         }
