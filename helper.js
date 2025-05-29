@@ -185,6 +185,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
     const buffer = Buffer.alloc(blob_size);
     await file.read(buffer, 0, blob_size, start);
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    let is_ok = false;
     
     for (let i = 0; i < maxTries; i++) {
         if (externalAbort.aborted) {
@@ -219,8 +220,8 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
             // log uploaded
             data.uploaded[partSeq] = true;
             uploadLog(blob_size);
+            is_ok = true;
             
-            return true;
             break;
         }
         catch(error){
@@ -251,7 +252,9 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
         }
     }
     
-    throw new Error(`Upload failed! [PART #${partSeq+1}]`);
+    if(!is_ok){
+        throw new Error(`Upload failed! [PART #${partSeq+1}]`);
+    }
 }
 
 function newProgressData() {
