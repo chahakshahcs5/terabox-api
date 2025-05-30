@@ -97,8 +97,8 @@ function decryptMd5(md5) {
 
 function changeBase64Type(str, mode = 1){
     return mode === 1
-        ? str.replace(/\+/g, '-').replace(/\//g, '_')
-        : str.replace(/_/g, '/').replace(/-/g, '+');
+        ? str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '%3D')  // to url-safe
+        : str.replace(/-/g,  '+').replace(/_/g,  '/').replace(/%3D/g, '='); // to url-unsafe
 }
 
 function aesDecrypt(pp1, pp2) {
@@ -117,6 +117,37 @@ function aesDecrypt(pp1, pp2) {
     return decrypted;
 }
 
+function md5LenPad(str) {
+    if (!str) return str;
+    const len = str.length;
+    return len < 10 ? str + '0' + len : str + len;
+}
+
+/**
+ * RSA-шифрование строки с публичным ключом (в PEM-формате)
+ * @param {string} message - исходное сообщение
+ * @param {string} publicKeyPEM - публичный RSA ключ в PEM формате
+ * @param {number} mode - если 2 → md5 + md5LenPad, иначе напрямую
+ * @returns {string} base64-строка с зашифрованными данными
+ */
+function encryptRSA(message, publicKeyPEM, mode = 1) {
+    if (mode === 2) {
+        const md5 = crypto.createHash('md5').update(message).digest('hex');
+        message = md5LenPad(md5);
+    }
+    
+    const buffer = Buffer.from(message, 'utf8');
+    
+    const encrypted = crypto.publicEncrypt({
+            key: publicKeyPEM,
+            padding: crypto.constants.RSA_PKCS1_PADDING,
+        },
+        buffer,
+    );
+    
+    return encrypted.toString('base64');
+)
+
 class TeraBoxApp {
     FormUrlEncoded = FormUrlEncoded;
     SignDownload = signDownload;
@@ -130,7 +161,8 @@ class TeraBoxApp {
         logid: '0',
         pcftoken: '',
         bdstoken: '',
-        jsToken: '', 
+        jsToken: '',
+        pubkey: '',
     };
     params = {
         whost: 'https://www.terabox.com',
@@ -1260,7 +1292,7 @@ class TeraBoxApp {
             const rdata = await req.body.json();
             
             if(rdata.code == 0){
-                rdata.pubkey = aesDecrypt(rdata.data.pp1, rdata.data.pp2);
+                this.data.pubkey = aesDecrypt(rdata.data.pp1, rdata.data.pp2);
             }
             
             return rdata;
