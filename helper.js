@@ -26,7 +26,7 @@ function getChunkSize(fileSize, is_vip = true) {
     return limitSizes.at(-1) * MiB;
 }
 
-async function hashFile(filePath, skipChunks) {
+async function hashFile(filePath) {
     const stat = fs.statSync(filePath);
     const sliceSize = 256 * 1024;
     const splitSize = getChunkSize(stat.size);
@@ -41,6 +41,7 @@ async function hashFile(filePath, skipChunks) {
         crc32: 0,
         slice: '',
         file: '',
+        etag: '',
         chunks: []
     };
     
@@ -68,20 +69,17 @@ async function hashFile(filePath, skipChunks) {
                     : Math.min(remaining, chunkRemaining);
                 
                 const chunk = data.subarray(offset, offset + readLimit);
+                chunkHash.update(chunk);
                 
                 if (sliceAllowed) {
                     sliceHash.update(chunk);
-                }
-                
-                if (!skipChunks) {
-                    chunkHash.update(chunk);
                 }
                 
                 offset += readLimit;
                 allBytesRead += readLimit;
                 bytesRead += readLimit;
                 
-                if (!skipChunks && bytesRead >= splitSize) {
+                if (bytesRead >= splitSize) {
                     hashData.chunks.push(chunkHash.digest('hex'));
                     chunkHash = crypto.createHash('md5');
                     bytesRead = 0;
@@ -92,16 +90,17 @@ async function hashFile(filePath, skipChunks) {
             printProgressLog('Hashing', hashedData, stat.size);
         }
         
+        if (bytesRead > 0) {
+            hashData.chunks.push(chunkHash.digest('hex'));
+        }
+        
         hashData.crc32 = crcHash >>> 0;
         hashData.slice = sliceHash.digest('hex');
         hashData.file = fileHash.digest('hex');
         
-        if (!skipChunks && bytesRead > 0) {
-            hashData.chunks.push(chunkHash.digest('hex'));
-        }
-        if (skipChunks) {
-            delete hashData.chunks;
-        }
+        const chunksJSON = JSON.stringify(hashData.chunks);
+        hashData.etag = crypto.createHash('md5').update(chunksJSON).digest('hex');
+        hashData.etag += hashData.chunks.length > 1 ? '-'+hashData.chunks.length : '';
         
         console.log();
         return hashData;
