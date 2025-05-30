@@ -97,10 +97,13 @@ async function hashFile(filePath) {
         hashData.crc32 = crcHash >>> 0;
         hashData.slice = sliceHash.digest('hex');
         hashData.file = fileHash.digest('hex');
+        hashData.etag = hashData.file;
         
-        const chunksJSON = JSON.stringify(hashData.chunks);
-        hashData.etag = crypto.createHash('md5').update(chunksJSON).digest('hex');
-        hashData.etag += hashData.chunks.length > 1 ? '-'+hashData.chunks.length : '';
+        if(hashData.chunks.length > 1){
+            const chunksJSON = JSON.stringify(hashData.chunks);
+            const chunksEtag = crypto.createHash('md5').update(chunksJSON).digest('hex');
+            hashData.etag = `${chunksEtag}-${hashData.chunks.length}`;
+        }
         
         console.log();
         return hashData;
