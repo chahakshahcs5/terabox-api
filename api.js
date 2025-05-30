@@ -3,6 +3,7 @@ import { Cookie, CookieJar } from 'tough-cookie';
 import { filesize } from 'filesize';
 
 import child_process from 'node:child_process';
+import crypto from 'node:crypto';
 import tls from 'node:tls';
 
 function makeRemoteFPath(sdir, sfile){
@@ -92,6 +93,28 @@ function decryptMd5(md5) {
         n.slice(16, 24);  // original e[24..31]
     
     return e;
+}
+
+function changeBase64Type(str, mode = 1){
+    return mode === 1
+        ? str.replace(/\+/g, '-').replace(/\//g, '_')
+        : str.replace(/_/g, '/').replace(/-/g, '+');
+}
+
+function aesDecrypt(pp1, pp2) {
+    pp1 = changeBase64Type(pp1, 2);
+    pp2 = changeBase64Type(pp2, 2);
+    
+    const cipherText = pp1.substring(16);
+    const key = Buffer.from(pp2, 'utf8');
+    const iv = Buffer.from(pp1.substring(0, 16), 'utf8');
+    
+    const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
+    
+    let decrypted = decipher.update(cipherText, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
 }
 
 class TeraBoxApp {
@@ -1216,6 +1239,34 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getRecentUploads', { cause: error });
+        }
+    }
+    
+    async getPublicKey(){
+        const url = new URL(this.params.whost + '/passport/getpubkey');
+        try{
+            const req = await request(url, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': this.params.ua,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            if(rdata.code == 0){
+                rdata.pubkey = aesDecrypt(rdata.data.pp1, rdata.data.pp2);
+            }
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getPublicKey', { cause: error });
         }
     }
 }
