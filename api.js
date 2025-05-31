@@ -15,7 +15,7 @@ class FormUrlEncoded {
     constructor(params) {
         this.data = new URLSearchParams();
         if(typeof params === 'object' && params !== null){
-            for (const [key, value] of params.entries()) {
+            for (const [key, value] of Object.entries(params)) {
                 this.data.append(key, value);
             }
         }
@@ -223,7 +223,8 @@ class TeraBoxApp {
             const rdata = await req.body.text();
             const tdataRegex = /<script>var templateData = (.*);<\/script>/;
             const jsTokenRegex = /window.jsToken%20%3D%20a%7D%3Bfn%28%22(.*)%22%29/;
-            const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1]) : {};
+            const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1].split(';</script>')[0]) : {};
+            const isLoginReq = req.headers.location == '/login' ? true : false;
             
             if(tdata.jsToken){
                 tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
@@ -231,9 +232,8 @@ class TeraBoxApp {
             else if(rdata.match(jsTokenRegex)){
                 tdata.jsToken = rdata.match(jsTokenRegex)[1];
             }
-            else{
-                const isLoginReq = req.headers.location == '/login' ? true : false;
-                console.error('[ERROR] Failed to update jsToken', (isLoginReq ? '[Login Required]' : ''));
+            else if(isLoginReq){
+                console.error('[ERROR] Failed to update jsToken [Login Required]');
             }
             
             if(req.headers.logid){
