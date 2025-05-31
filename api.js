@@ -101,7 +101,7 @@ function changeBase64Type(str, mode = 1){
         : str.replace(/-/g,  '+').replace(/_/g,  '/').replace(/%3D/g, '='); // to url-unsafe
 }
 
-function aesDecrypt(pp1, pp2) {
+function decryptAES(pp1, pp2) {
     pp1 = changeBase64Type(pp1, 2);
     pp2 = changeBase64Type(pp2, 2);
     
@@ -117,23 +117,17 @@ function aesDecrypt(pp1, pp2) {
     return decrypted;
 }
 
-function md5LenPad(str) {
-    if (!str) return str;
-    const len = str.length;
-    return len < 10 ? str + '0' + len : str + len;
-}
-
 /**
- * RSA-шифрование строки с публичным ключом (в PEM-формате)
- * @param {string} message - исходное сообщение
- * @param {string} publicKeyPEM - публичный RSA ключ в PEM формате
- * @param {number} mode - если 2 → md5 + md5LenPad, иначе напрямую
- * @returns {string} base64-строка с зашифрованными данными
+ * RSA encryption of a string using a public key (in PEM format)
+ * @param {string} message - the original message to encrypt
+ * @param {string} publicKeyPEM - the RSA public key in PEM format
+ * @param {number} mode - if 2 → apply MD5 hash + md5LenPad, otherwise encrypt directly
+ * @returns {string} base64-encoded encrypted data
  */
 function encryptRSA(message, publicKeyPEM, mode = 1) {
     if (mode === 2) {
         const md5 = crypto.createHash('md5').update(message).digest('hex');
-        message = md5LenPad(md5);
+        message = md5 + (md5.length<10?'0':'') + md5.length;
     }
     
     const buffer = Buffer.from(message, 'utf8');
@@ -146,7 +140,7 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     );
     
     return encrypted.toString('base64');
-)
+}
 
 class TeraBoxApp {
     FormUrlEncoded = FormUrlEncoded;
@@ -154,6 +148,11 @@ class TeraBoxApp {
     CheckMd5Val = checkMd5val;
     CheckMd5Arr = checkMd5arr;
     DecryptMd5 = decryptMd5;
+    
+    ChangeBase64Type = changeBase64Type;
+    DecryptAES = decryptAES;
+    EncryptRSA = encryptRSA;
+    
     TERABOX_TIMEOUT = 10000;
     
     data = {
@@ -1292,7 +1291,7 @@ class TeraBoxApp {
             const rdata = await req.body.json();
             
             if(rdata.code == 0){
-                this.data.pubkey = aesDecrypt(rdata.data.pp1, rdata.data.pp2);
+                this.data.pubkey = this.DecryptAES(rdata.data.pp1, rdata.data.pp2);
             }
             
             return rdata;
