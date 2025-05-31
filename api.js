@@ -32,6 +32,9 @@ class FormUrlEncoded {
     str(){
         return this.data.toString().replace(/\+/g, '%20');
     }
+    url(){
+        return this.data;
+    }
 }
 
 function signDownload(s1, s2) {
@@ -97,8 +100,8 @@ function decryptMd5(md5) {
 
 function changeBase64Type(str, mode = 1){
     return mode === 1
-        ? str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '%3D')  // to url-safe
-        : str.replace(/-/g,  '+').replace(/_/g,  '/').replace(/%3D/g, '='); // to url-unsafe
+        ? str.replace(/\+/g, '-').replace(/\//g, '_')  // to url-safe
+        : str.replace(/-/g,  '+').replace(/_/g,  '/'); // to url-unsafe
 }
 
 function decryptAES(pp1, pp2) {
@@ -367,6 +370,47 @@ class TeraBoxApp {
         }
         catch(error){
             throw new Error('getAccountData', { cause: error });
+        }
+    }
+    
+    async preLogin(email){
+        const url = new URL(this.params.whost + '/passport/prelogin');
+        const authUrl = 'wap/outlogin/login';
+        
+        try{
+            if(this.data.pcftoken === ''){
+                await this.updateAppData(authUrl);
+            }
+            
+            const formData = new FormUrlEncoded();
+            formData.append('client', 'web');
+            formData.append('pass_version', '2.8');
+            //formData.append('lang', this.params.lang);
+            formData.append('clientfrom', 'h5');
+            formData.append('pcftoken', this.data.pcftoken);
+            formData.append('email', email);
+            formData.append('psign', 0);
+            
+            const req = await request(url, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: `${this.params.whost}/${authUrl}`,
+                },
+                body: formData.str(),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('preLogin', { cause: error });
         }
     }
     
