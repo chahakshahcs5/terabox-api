@@ -145,6 +145,11 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     return encrypted.toString('base64');
 }
 
+function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) {
+    const combined = `${client}-${seval}-${encpwd}-${email}-${browserid}-${random}`;
+    return crypto.createHash('sha1').update(combined).digest('hex');
+}
+
 class TeraBoxApp {
     FormUrlEncoded = FormUrlEncoded;
     SignDownload = signDownload;
@@ -155,6 +160,7 @@ class TeraBoxApp {
     ChangeBase64Type = changeBase64Type;
     DecryptAES = decryptAES;
     EncryptRSA = encryptRSA;
+    PRandGen = prandGen;
     
     TERABOX_TIMEOUT = 10000;
     
@@ -382,21 +388,19 @@ class TeraBoxApp {
                 await this.updateAppData(authUrl);
             }
             
-            const formData = new FormUrlEncoded();
+            const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
-            //formData.append('lang', this.params.lang);
             formData.append('clientfrom', 'h5');
             formData.append('pcftoken', this.data.pcftoken);
             formData.append('email', email);
-            formData.append('psign', 0);
             
             const req = await request(url, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
-                    Referer: `${this.params.whost}/${authUrl}`,
+                    Referer: this.params.whost,
                 },
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
@@ -411,6 +415,69 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('preLogin', { cause: error });
+        }
+    }
+    
+    async doAuth(preLoginData, email, pass){
+        const url = new URL(this.params.whost + '/passport/login');
+        
+        try{
+            if(this.data.pubkey === ''){
+                await this.getPublicKey();
+            }
+            
+            const cJar = new CookieJar();
+            this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
+            const browserid = cJar.getCookiesSync(this.params.whost).find(cookie => cookie.key === 'browserid').value || '';
+            const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
+            
+            const prand = this.PRandGen('web', preLoginData.seval, encpwd, email, browserid, preLoginData.random);
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('client', 'web');
+            formData.append('pass_version', '2.8');
+            formData.append('clientfrom', 'h5');
+            formData.append('pcftoken', this.data.pcftoken);
+            formData.append('prand', prand);
+            formData.append('email', email);
+            formData.append('pwd', encpwd);
+            formData.append('seval', preLoginData.seval);
+            formData.append('random', preLoginData.random);
+            formData.append('timestamp', preLoginData.timestamp);
+            
+            const req = await request(url, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            if(rdata.code === 0){
+                if(typeof req.headers['set-cookie'] == 'string'){
+                    req.headers['set-cookie'] = [req.headers['set-cookie']];
+                }
+                for(const cookie of req.headers['set-cookie']){
+                    const cookieStr = cookie.split('; ')[0];
+                    if(cookieStr.match(/^ndus=/)){
+                        rdata.data.ndus = cookieStr.replace(/^ndus=/, '');
+                    }
+                }
+            }
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getPassport', { cause: error });
         }
     }
     
@@ -506,7 +573,7 @@ class TeraBoxApp {
             jsToken: this.data.jsToken,
         });
         
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('order', 'name');
         formData.append('desc', 0);
         formData.append('dir', remoteDir);
@@ -634,7 +701,7 @@ class TeraBoxApp {
     }
     
     async precreateFile(data){
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         // formData.append('target_path', data.remote_dir);
         formData.append('autoinit', 1);
@@ -707,7 +774,7 @@ class TeraBoxApp {
     }
     
     async rapidUpload(data){
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         // formData.append('target_path', data.remote_dir);
         formData.append('content-length', data.size);
@@ -847,7 +914,7 @@ class TeraBoxApp {
     }
     
     async createDir(remoteDir){
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('path', remoteDir);
         formData.append('isdir', 1);
         formData.append('block_list', '[]');
@@ -884,7 +951,7 @@ class TeraBoxApp {
     }
     
     async createFile(data) {
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         // formData.append('isdir', 0);
         formData.append('size', data.size);
@@ -983,7 +1050,7 @@ class TeraBoxApp {
         // opera=rename: filelist：[{"path":"/hello/test.mp4","newname":"test_one.mp4"}]
         // opera=delete: filelist: ["/test.mp4"]
         
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('filelist', JSON.stringify(fmparams));
         
         try{
@@ -1088,7 +1155,7 @@ class TeraBoxApp {
     }
     
     async fileDiff(){
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
         if(this.params.cursor == 'null'){
             formData.append('c', 'full');
@@ -1213,7 +1280,7 @@ class TeraBoxApp {
     async download(fs_ids, signb){
         const url = new URL(this.params.whost + '/api/download');
         
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         for(const [k, v] of this.params.app.entries()){
              formData.append(k, v);
         }
@@ -1254,7 +1321,7 @@ class TeraBoxApp {
     async getFileMeta(remote_file_list){
         const url = new URL(this.params.whost + '/api/filemetas');
         
-        const formData = new FormUrlEncoded();
+        const formData = new this.FormUrlEncoded();
         formData.append('dlink', 1);
         formData.append('origin', 'dlna');
         formData.append('target', JSON.stringify(remote_file_list));
