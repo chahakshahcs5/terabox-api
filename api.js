@@ -197,7 +197,7 @@ class TeraBoxApp {
     
     constructor(authData, authType = 'ndus') {
         this.params.cookie = `lang=${this.params.lang}`;
-        if(authType == 'ndus'){
+        if(authType === 'ndus'){
             this.params.cookie += authData ? '; ndus=' + authData : '';
         }
         else{
@@ -220,7 +220,7 @@ class TeraBoxApp {
             if(req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
-                if(typeof req.headers['set-cookie'] == 'string'){
+                if(typeof req.headers['set-cookie'] === 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
@@ -233,7 +233,7 @@ class TeraBoxApp {
             const tdataRegex = /<script>var templateData = (.*);<\/script>/;
             const jsTokenRegex = /window.jsToken%20%3D%20a%7D%3Bfn%28%22(.*)%22%29/;
             const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1].split(';</script>')[0]) : {};
-            const isLoginReq = req.headers.location == '/login' ? true : false;
+            const isLoginReq = req.headers.location === '/login' ? true : false;
             
             if(tdata.jsToken){
                 tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
@@ -258,7 +258,7 @@ class TeraBoxApp {
         }
         catch(error){
             const errorPrefix = '[ERROR] Failed to update jsToken:';
-            if(error.name == 'TimeoutError'){
+            if(error.name === 'TimeoutError'){
                 console.error(errorPrefix, error.message);
                 return;
             }
@@ -300,7 +300,7 @@ class TeraBoxApp {
             if(save_cookies && req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
-                if(typeof req.headers['set-cookie'] == 'string'){
+                if(typeof req.headers['set-cookie'] === 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
@@ -368,7 +368,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.error_code == 0){
+            if(rdata.error_code === 0){
                 this.params.vip_type = rdata.data.member_info.is_vip;
                 this.params.is_vip = this.params.vip_type > 0 ? true : false;
             }
@@ -428,7 +428,7 @@ class TeraBoxApp {
             
             const cJar = new CookieJar();
             this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
-            const browserid = cJar.getCookiesSync(this.params.whost).find(cookie => cookie.key === 'browserid').value || '';
+            const browserid = cJar.toJSON().cookies.find(c => c.key === 'browserid').value || '';
             const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
             
             const prand = this.PRandGen('web', preLoginData.seval, encpwd, email, browserid, preLoginData.random);
@@ -463,15 +463,14 @@ class TeraBoxApp {
             const rdata = await req.body.json();
             
             if(rdata.code === 0){
-                if(typeof req.headers['set-cookie'] == 'string'){
+                if(typeof req.headers['set-cookie'] === 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
-                    const cookieStr = cookie.split('; ')[0];
-                    if(cookieStr.match(/^ndus=/)){
-                        rdata.data.ndus = cookieStr.replace(/^ndus=/, '');
-                    }
+                   cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
+                const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
+                rdata.data.ndus = ndus;
             }
             
             return rdata;
@@ -498,7 +497,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.errno == 0){
+            if(rdata.errno === 0){
                 this.params.account_name = rdata.data.display_name;
             }
             return rdata;
@@ -529,7 +528,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.errno == 0){
+            if(rdata.errno === 0){
                 rdata.available = rdata.total - rdata.used;
                 this.params.space_available = rdata.available;
                 this.params.space_total = rdata.total;
@@ -710,7 +709,7 @@ class TeraBoxApp {
         formData.append('block_list', '[]');
         formData.append('rtype', 2);
         
-        if(data.upload_id && typeof data.upload_id == 'string' && data.upload_id != ''){
+        if(data.upload_id && typeof data.upload_id === 'string' && data.upload_id !== ''){
             formData.append('uploadid', data.upload_id);
         }
         
@@ -1125,7 +1124,7 @@ class TeraBoxApp {
             page: page,
         });
         
-        if(remoteDir == ''){
+        if(remoteDir === ''){
             url.searchParams.append('root', '1');
         }
         
@@ -1157,7 +1156,7 @@ class TeraBoxApp {
     async fileDiff(){
         const formData = new this.FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
-        if(this.params.cursor == 'null'){
+        if(this.params.cursor === 'null'){
             formData.append('c', 'full');
         }
         formData.append('action', 'manual');
@@ -1191,7 +1190,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.errno == 0){
+            if(rdata.errno === 0){
                 this.params.cursor = rdata.cursor;
                 if(!Array.isArray(rdata.request_id)){
                     rdata.request_id = [ rdata.request_id ];
@@ -1199,7 +1198,7 @@ class TeraBoxApp {
                 if(rdata.has_more){
                     // Extra FileDiff request...
                     const rFileDiff = await this.fileDiff();
-                    if(rFileDiff.errno == 0){
+                    if(rFileDiff.errno === 0){
                         rdata.reset = rFileDiff.reset;
                         rdata.request_id = rdata.request_id.concat(rFileDiff.request_id);
                         rdata.entries = Object.assign({}, rdata.entries, rFileDiff.entries);
@@ -1266,7 +1265,7 @@ class TeraBoxApp {
             
             const rdata = await req.body.json();
             
-            if(rdata.errno == 0){
+            if(rdata.errno === 0){
                 rdata.data.signb = this.SignDownload(rdata.data.sign1, rdata.data.sign3);
             }
             
@@ -1401,7 +1400,7 @@ class TeraBoxApp {
             
             const rdata = await req.body.json();
             
-            if(rdata.code == 0){
+            if(rdata.code === 0){
                 this.data.pubkey = this.DecryptAES(rdata.data.pp1, rdata.data.pp2);
             }
             
