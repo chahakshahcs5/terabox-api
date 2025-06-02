@@ -182,16 +182,17 @@ class TeraBoxApp {
             channel: 'dubox',
             clienttype: 0, // 5 is wap?
         },
-        ver_android: '3.40.0',
-        ua: 'terabox;1.37.0.7;PC;PC-Windows;10.0.22631;WindowsTeraBox',
+        ver_android: '3.44.2',
+        ua: 'terabox;1.40.0.132;PC;PC-Windows;10.0.26100;WindowsTeraBox',
         cookie: '',
         auth: {},
+        account_id: 0,
         account_name: '',
-        is_vip: true,
-        vip_type: 2,
+        is_vip: false,
+        vip_type: 0,
         space_used: 0,
-        space_total: 2 * Math.pow(1024, 3),
-        space_available: 2 * Math.pow(1024, 3),
+        space_total: Math.pow(1024, 3),
+        space_available: Math.pow(1024, 3),
         cursor: 'null',
     };
     
@@ -254,6 +255,12 @@ class TeraBoxApp {
             this.data.bdstoken = tdata.bdstoken || '';
             this.data.jsToken = tdata.jsToken || '';
             
+            this.params.account_id = parseInt(tdata.uk) || 0;
+            if(typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0){
+                this.params.is_vip = true;
+                this.params.vip_type = 2;
+            }
+            
             return tdata;
         }
         catch(error){
@@ -265,6 +272,13 @@ class TeraBoxApp {
             error = new Error('updateAppData', { cause: error });
             console.error(errorPrefix, error);
         }
+    }
+    
+    setVipDefaults(){
+        this.params.is_vip = true;
+        this.params.vip_type = 2;
+        this.params.space_total = Math.pow(1024, 3) * 2;
+        this.params.space_available = Math.pow(1024, 3) * 2;
     }
     
     async doReq(req_url, req_options = {}, retries = 4){
@@ -324,6 +338,36 @@ class TeraBoxApp {
         }
     }
     
+    async getSysCfg(){
+        const url = new URL(this.params.whost + '/api/getsyscfg');
+        url.search = new URLSearchParams({
+            clienttype: this.params.app.clienttype,
+            language_type: this.params.lang,
+            cfg_category_keys: '[]',
+            version: 0,
+        });
+        
+        try{
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': this.params.ua,
+                    // 'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch(error){
+            throw new Error('getSysCfg', { cause: error });
+        }
+    }
+    
     async checkLogin(){
         const url = new URL(this.params.whost + '/api/check/login');
         
@@ -341,6 +385,9 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
+            if(rdata.errno == 0){
+                this.params.account_id = rdata.uk;
+            }
             return rdata;
         }
         catch(error){
@@ -369,8 +416,8 @@ class TeraBoxApp {
             
             const rdata = await req.body.json();
             if(rdata.error_code === 0){
-                this.params.vip_type = rdata.data.member_info.is_vip;
-                this.params.is_vip = this.params.vip_type > 0 ? true : false;
+                this.params.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
+                this.params.vip_type = this.params.is_vip ? 2 : 0;
             }
             return rdata;
         }
