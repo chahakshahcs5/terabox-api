@@ -385,7 +385,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.errno == 0){
+            if(rdata.errno === 0){
                 this.params.account_id = rdata.uk;
             }
             return rdata;
