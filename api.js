@@ -547,6 +547,8 @@ class TeraBoxApp {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
                     Referer: this.params.whost,
                 },
                 body: formData.str(),
@@ -585,6 +587,8 @@ class TeraBoxApp {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
                     Referer: this.params.whost,
                 },
                 body: formData.str(),
@@ -627,6 +631,8 @@ class TeraBoxApp {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
                     Referer: this.params.whost,
                 },
                 body: formData.str(),
