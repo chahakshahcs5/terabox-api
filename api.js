@@ -527,6 +527,138 @@ class TeraBoxApp {
         }
     }
     
+    async regSendCode(email){
+        const url = new URL(this.params.whost + '/passport/register_v4/sendcode');
+        const emailRegUrl = 'wap/outlogin/emailRegister';
+        
+        try{
+            if(this.data.pcftoken === ''){
+                await this.updateAppData(emailRegUrl);
+            }
+        
+            const formData = new this.FormUrlEncoded();
+            formData.append('client', 'web');
+            formData.append('pass_version', '2.8');
+            formData.append('clientfrom', 'h5');
+            formData.append('pcftoken', this.data.pcftoken);
+            formData.append('email', email);
+            
+            const req = await request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            // rdata.code: 0 - OK
+            // rdata.code: 10 - Email format invalid
+            // rdata.code: 11 - Email has been register before
+            // rdata.code: 60 - Send code too fast, wait ~60sec
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('regSendCode', { cause: error });
+        }
+    }
+    
+    async regVerify(regToken, code){
+        const url = new URL(this.params.whost + '/passport/register_v4/verify');
+        
+        try{
+            const formData = new this.FormUrlEncoded();
+            formData.append('client', 'web');
+            formData.append('pass_version', '2.8');
+            formData.append('clientfrom', 'h5');
+            formData.append('pcftoken', this.data.pcftoken);
+            formData.append('token', regToken);
+            formData.append('code', code);
+            
+            const req = await request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            // rdata.code: 0 - OK
+            // rdata.code: 59 - Email code is wrong
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('regVerify', { cause: error });
+        }
+    }
+    
+    async regFinish(regToken, pass){
+        const url = new URL(this.params.whost + '/passport/register_v4/finish');
+        
+        try{
+            if(this.data.pubkey === ''){
+                await this.getPublicKey();
+            }
+            
+            const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('client', 'web');
+            formData.append('pass_version', '2.8');
+            formData.append('clientfrom', 'h5');
+            formData.append('pcftoken', this.data.pcftoken);
+            formData.append('token', regToken);
+            formData.append('pwd', encpwd);
+            
+            const req = await request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            
+            if(rdata.code === 0 && req.headers['set-cookie']){
+                const cJar = new CookieJar();
+                
+                if(typeof req.headers['set-cookie'] === 'string'){
+                    req.headers['set-cookie'] = [req.headers['set-cookie']];
+                }
+                for(const cookie of req.headers['set-cookie']){
+                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
+                }
+                
+                const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
+                rdata.data.ndus = ndus;
+            }
+            
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('regFinish', { cause: error });
+        }
+    }
+    
     async getPassport(){
         const url = new URL(this.params.whost + '/passport/get_info');
         
