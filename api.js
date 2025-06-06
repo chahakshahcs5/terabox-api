@@ -258,7 +258,7 @@ class TeraBoxApp {
             this.params.account_id = parseInt(tdata.uk) || 0;
             if(typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0){
                 this.params.is_vip = true;
-                this.params.vip_type = 2;
+                //this.params.vip_type = 2;
             }
             
             return tdata;
@@ -395,38 +395,7 @@ class TeraBoxApp {
         }
     }
     
-    async getAccountData(){
-        const url = new URL(this.params.whost + '/rest/2.0/membership/proxy/user');
-        url.search = new URLSearchParams({
-            method: 'query',
-        });
-        
-        try{
-            const req = await request(url, {
-                headers: {
-                    'User-Agent': this.params.ua,
-                    'Cookie': this.params.cookie,
-                },
-                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
-            });
-            
-            if (req.statusCode !== 200) {
-                throw new Error(`HTTP error! Status: ${req.statusCode}`);
-            }
-            
-            const rdata = await req.body.json();
-            if(rdata.error_code === 0){
-                this.params.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
-                this.params.vip_type = this.params.is_vip ? 2 : 0;
-            }
-            return rdata;
-        }
-        catch(error){
-            throw new Error('getAccountData', { cause: error });
-        }
-    }
-    
-    async preLogin(email){
+    async passportPreLogin(email){
         const url = new URL(this.params.whost + '/passport/prelogin');
         const authUrl = 'wap/outlogin/login';
         
@@ -461,11 +430,11 @@ class TeraBoxApp {
             return rdata;
         }
         catch (error) {
-            throw new Error('preLogin', { cause: error });
+            throw new Error('passportPreLogin', { cause: error });
         }
     }
     
-    async doAuth(preLoginData, email, pass){
+    async passportLogin(preLoginData, email, pass){
         const url = new URL(this.params.whost + '/passport/login');
         
         try{
@@ -523,7 +492,7 @@ class TeraBoxApp {
             return rdata;
         }
         catch (error) {
-            throw new Error('getPassport', { cause: error });
+            throw new Error('passportLogin', { cause: error });
         }
     }
     
@@ -665,7 +634,7 @@ class TeraBoxApp {
         }
     }
     
-    async getPassport(){
+    async passportGetInfo(){
         const url = new URL(this.params.whost + '/passport/get_info');
         
         try{
@@ -689,6 +658,37 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getPassport', { cause: error });
+        }
+    }
+    
+    async userMembership(){
+        const url = new URL(this.params.whost + '/rest/2.0/membership/proxy/user');
+        url.search = new URLSearchParams({
+            method: 'query',
+        });
+        
+        try{
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            if(rdata.error_code === 0){
+                this.params.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
+                //this.params.vip_type = this.params.is_vip ? 2 : 0;
+            }
+            return rdata;
+        }
+        catch(error){
+            throw new Error('userMembership', { cause: error });
         }
     }
     
@@ -850,6 +850,26 @@ class TeraBoxApp {
         }
     }
     
+    async getCurrentUserInfo(){
+        try{
+            if(this.params.account_id === 0){
+                await this.checkLogin();
+            }
+            const curUser = await this.getUserInfo(this.params.account_id);
+            if(curUser.records.length > 0){
+                const thisUser = curUser.records[0];
+                this.params.account_name = thisUser.uname;
+                this.params.is_vip = thisUser.vip_type > 0 ? true : false;
+                this.params.vip_type = thisUser.vip_type;
+            }
+            
+            return curUser;
+        }
+        catch (error) {
+            throw new Error('getCurrentUserInfo', { cause: error });
+        }
+    }
+    
     async getUserInfo(user_id){
         user_id = parseInt(user_id);
         const url = new URL(this.params.whost + '/api/user/getinfo');
@@ -860,7 +880,7 @@ class TeraBoxApp {
         });
         
         try{
-            if(isNaN(user_id) || user_id < 1){
+            if(isNaN(user_id) || !Number.isSafeInteger(user_id)){
                 throw new Error(`${user_id} is not user id`);
             }
             
