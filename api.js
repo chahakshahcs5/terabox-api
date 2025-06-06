@@ -946,8 +946,7 @@ class TeraBoxApp {
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
-        const api_prefixurl = data.is_teratransfer ? 'a' : '';
-        const url = new URL(this.params.whost + `/api/${api_prefixurl}precreate`);
+        const url = new URL(this.params.whost + `/api/precreate`);
         url.search = new URLSearchParams({
             ...this.params.app,
             jsToken: this.data.jsToken,
@@ -1080,10 +1079,6 @@ class TeraBoxApp {
             partseq: partseq,
         });
         
-        if(data.is_teratransfer){
-            url.searchParams.append('useteratransfer', '1')
-        }
-        
         const formData = new FormData();
         formData.append('file', blob, 'blob');
         
@@ -1184,8 +1179,7 @@ class TeraBoxApp {
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
         
-        const api_prefixurl = data.is_teratransfer ? 'anno' : '';
-        const url = new URL(this.params.whost + `/api/${api_prefixurl}create`);
+        const url = new URL(this.params.whost + `/api/create`);
         url.search = new URLSearchParams({
             ...this.params.app,
             jsToken: this.data.jsToken,
@@ -1585,6 +1579,49 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getRecentUploads', { cause: error });
+        }
+    }
+    
+    async shareSet(filelist, pass = '', period = 0){
+        const url = new URL(this.params.whost + '/share/pset');
+        url.search = new URLSearchParams({
+            ...this.params.app,
+            jsToken: this.data.jsToken,
+        });
+        
+        try{
+            filelist = Array.isArray(filelist) ? filelist : [];
+            filelist = JSON.stringify(filelist);
+            
+            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]$/i) ? pass : '';
+            const schannel = pass !== '' ? 4 : 0;
+            
+            period = parseInt(period);
+            period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('schannel', schannel);
+            formData.append('channel_list', '[0]');
+            formData.append('period', period);
+            formData.append('path_list', filelist);
+            formData.append('pwd', pass);
+            
+            const req = await request(url, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+    
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareSet', { cause: error });
         }
     }
     
