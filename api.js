@@ -1278,6 +1278,49 @@ class TeraBoxApp {
         }
     }
     
+        async shareSet(filelist, pass = '', period = 0){
+        const url = new URL(this.params.whost + '/share/pset');
+        url.search = new URLSearchParams({
+            ...this.params.app,
+            jsToken: this.data.jsToken,
+        });
+        
+        try{
+            filelist = Array.isArray(filelist) ? filelist : [];
+            filelist = JSON.stringify(filelist);
+            
+            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]$/i) ? pass : '';
+            const schannel = pass !== '' ? 4 : 0;
+            
+            period = parseInt(period);
+            period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('schannel', schannel);
+            formData.append('channel_list', '[]');
+            formData.append('period', period);
+            formData.append('path_list', filelist);
+            formData.append('pwd', pass);
+            
+            const req = await request(url, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+    
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareSet', { cause: error });
+        }
+    }
+    
     async shortUrlInfo(shareId){
         const url = new URL(this.params.whost + '/api/shorturlinfo');
         url.search = new URLSearchParams({
@@ -1582,49 +1625,6 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getRecentUploads', { cause: error });
-        }
-    }
-    
-    async shareSet(filelist, pass = '', period = 0){
-        const url = new URL(this.params.whost + '/share/pset');
-        url.search = new URLSearchParams({
-            ...this.params.app,
-            jsToken: this.data.jsToken,
-        });
-        
-        try{
-            filelist = Array.isArray(filelist) ? filelist : [];
-            filelist = JSON.stringify(filelist);
-            
-            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]$/i) ? pass : '';
-            const schannel = pass !== '' ? 4 : 0;
-            
-            period = parseInt(period);
-            period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
-            
-            const formData = new this.FormUrlEncoded();
-            formData.append('schannel', schannel);
-            formData.append('channel_list', '[0]');
-            formData.append('period', period);
-            formData.append('path_list', filelist);
-            formData.append('pwd', pass);
-            
-            const req = await request(url, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'User-Agent': this.params.ua,
-                    'Cookie': this.params.cookie,
-                    Referer: this.params.whost,
-                },
-                body: formData.str(),
-                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
-            });
-    
-            const rdata = await req.body.json();
-            return rdata;
-        }
-        catch (error) {
-            throw new Error('shareSet', { cause: error });
         }
     }
     
