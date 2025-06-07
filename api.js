@@ -683,12 +683,69 @@ class TeraBoxApp {
             const rdata = await req.body.json();
             if(rdata.error_code === 0){
                 this.params.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
-                //this.params.vip_type = this.params.is_vip ? 2 : 0;
+                // this.params.vip_type = this.params.is_vip ? 2 : 0;
+                if(this.params.is_vip === 0){
+                    this.params.vip_type = 0;
+                }
             }
             return rdata;
         }
         catch(error){
             throw new Error('userMembership', { cause: error });
+        }
+    }
+    
+    async getCurrentUserInfo(){
+        try{
+            if(this.params.account_id === 0){
+                await this.checkLogin();
+            }
+            const curUser = await this.getUserInfo(this.params.account_id);
+            if(curUser.records.length > 0){
+                const thisUser = curUser.records[0];
+                this.params.account_name = thisUser.uname;
+                this.params.is_vip = thisUser.vip_type > 0 ? true : false;
+                this.params.vip_type = thisUser.vip_type;
+            }
+            
+            return curUser;
+        }
+        catch (error) {
+            throw new Error('getCurrentUserInfo', { cause: error });
+        }
+    }
+    
+    async getUserInfo(user_id){
+        user_id = parseInt(user_id);
+        const url = new URL(this.params.whost + '/api/user/getinfo');
+        url.search = new URLSearchParams({
+            user_list: JSON.stringify([user_id]),
+            need_relation: 0,
+            need_secret_info: 1,
+        });
+        
+        try{
+            if(isNaN(user_id) || !Number.isSafeInteger(user_id)){
+                throw new Error(`${user_id} is not user id`);
+            }
+            
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getUserInfo', { cause: error });
         }
     }
     
@@ -847,60 +904,6 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('clearRecycleBin', { cause: error });
-        }
-    }
-    
-    async getCurrentUserInfo(){
-        try{
-            if(this.params.account_id === 0){
-                await this.checkLogin();
-            }
-            const curUser = await this.getUserInfo(this.params.account_id);
-            if(curUser.records.length > 0){
-                const thisUser = curUser.records[0];
-                this.params.account_name = thisUser.uname;
-                this.params.is_vip = thisUser.vip_type > 0 ? true : false;
-                this.params.vip_type = thisUser.vip_type;
-            }
-            
-            return curUser;
-        }
-        catch (error) {
-            throw new Error('getCurrentUserInfo', { cause: error });
-        }
-    }
-    
-    async getUserInfo(user_id){
-        user_id = parseInt(user_id);
-        const url = new URL(this.params.whost + '/api/user/getinfo');
-        url.search = new URLSearchParams({
-            user_list: JSON.stringify([user_id]),
-            need_relation: 0,
-            need_secret_info: 1,
-        });
-        
-        try{
-            if(isNaN(user_id) || !Number.isSafeInteger(user_id)){
-                throw new Error(`${user_id} is not user id`);
-            }
-            
-            const req = await request(url, {
-                headers: {
-                    'User-Agent': this.params.ua,
-                    'Cookie': this.params.cookie,
-                },
-                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
-            });
-            
-            if (req.statusCode !== 200) {
-                throw new Error(`HTTP error! Status: ${req.statusCode}`);
-            }
-            
-            const rdata = await req.body.json();
-            return rdata;
-        }
-        catch (error) {
-            throw new Error('getUserInfo', { cause: error });
         }
     }
     
