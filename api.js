@@ -971,6 +971,7 @@ class TeraBoxApp {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
             
+            // uploadid	= 'P1-' + BASE64(ServerLocalIP + ':' + ServerTime + ':' + RequestID)
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1278,6 +1279,30 @@ class TeraBoxApp {
         }
     }
     
+    async shareList(){
+        const url = new URL(this.params.whost + '/share/teratransfer/sharelist');
+        url.search = new URLSearchParams({
+            ...this.params.app,
+            jsToken: this.data.jsToken,
+        });
+        
+        try{
+            const req = await request(url, {
+                headers: {
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+    
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareList', { cause: error });
+        }
+    }
+    
     async shareSet(filelist, pass = '', period = 0){
         const url = new URL(this.params.whost + '/share/pset');
         url.search = new URLSearchParams({
@@ -1319,6 +1344,39 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('shareSet', { cause: error });
+        }
+    }
+    
+    async shareCancel(shareid_list = []){
+        const url = new URL(this.params.whost + '/share/cancel');
+        url.search = new URLSearchParams({
+            ...this.params.app,
+            jsToken: this.data.jsToken,
+        });
+        
+        try{
+            shareid_list = Array.isArray(shareid_list) ? shareid_list : [];
+            shareid_list = JSON.stringify(shareid_list);
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('shareid_list', shareid_list);
+            
+            const req = await request(url, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                body: formData.str(),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+    
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareCancel', { cause: error });
         }
     }
     
