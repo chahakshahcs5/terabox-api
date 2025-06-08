@@ -1278,7 +1278,7 @@ class TeraBoxApp {
         }
     }
     
-        async shareSet(filelist, pass = '', period = 0){
+    async shareSet(filelist, pass = '', period = 0){
         const url = new URL(this.params.whost + '/share/pset');
         url.search = new URLSearchParams({
             ...this.params.app,
@@ -1292,6 +1292,7 @@ class TeraBoxApp {
             pass = typeof pass === 'string' && pass.match(/^[0-9a-z]$/i) ? pass : '';
             const schannel = pass !== '' ? 4 : 0;
             
+            // 0 - infinity, otherwise valid X days
             period = parseInt(period);
             period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
             
