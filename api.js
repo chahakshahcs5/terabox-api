@@ -1289,7 +1289,7 @@ class TeraBoxApp {
             filelist = Array.isArray(filelist) ? filelist : [];
             filelist = JSON.stringify(filelist);
             
-            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]$/i) ? pass : '';
+            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]{4}$/i) ? pass : '';
             const schannel = pass !== '' ? 4 : 0;
             
             // 0 - infinity, otherwise valid X days
