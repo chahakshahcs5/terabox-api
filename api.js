@@ -6,13 +6,36 @@ import child_process from 'node:child_process';
 import crypto from 'node:crypto';
 import tls from 'node:tls';
 
+/**
+ * Constructs a remote file path by combining a directory and filename, ensuring proper slash formatting
+ * @param {string} sdir - The directory path (with or without trailing slash)
+ * @param {string} sfile - The filename to append to the directory path
+ * @returns {string} The combined full path with exactly one slash between directory and filename
+ * @example
+ * makeRemoteFPath('documents', 'file.txt')    // returns 'documents/file.txt'
+ * makeRemoteFPath('documents/', 'file.txt')   // returns 'documents/file.txt'
+ */
 function makeRemoteFPath(sdir, sfile){
     const tdir = sdir.match(/\/$/) ? sdir : sdir + '/';
     return tdir + sfile;
 }
 
+/**
+ * A utility class for handling application/x-www-form-urlencoded data
+ * Wraps URLSearchParams with additional convenience methods and encoding behavior
+ */
 class FormUrlEncoded {
+    /**
+     * Creates a new FormUrlEncoded instance
+     * @param {Object.<string, string>} [params] - Optional initial parameters as key-value pairs
+     * @example
+     * const form = new FormUrlEncoded({ foo: 'bar', baz: 'qux' });
+     */
     constructor(params) {
+        /**
+         * @private
+         * @type {URLSearchParams}
+         */
         this.data = new URLSearchParams();
         if(typeof params === 'object' && params !== null){
             for (const [key, value] of Object.entries(params)) {
@@ -20,39 +43,89 @@ class FormUrlEncoded {
             }
         }
     }
+    /**
+     * Sets or replaces a parameter value
+     * @param {string} param - The parameter name
+     * @param {string} value - The parameter value
+     * @returns {void}
+     */
     set(param, value){
         this.data.set(param, value);
     }
+    /**
+     * Appends a new value to an existing parameter
+     * @param {string} param - The parameter name
+     * @param {string} value - The parameter value
+     * @returns {void}
+     */
     append(param, value){
         this.data.append(param, value);
     }
+    /**
+     * Removes a parameter
+     * @param {string} param - The parameter name to remove
+     * @returns {void}
+     */
     delete(param){
         this.data.delete(param);
     }
+    /**
+     * Returns the encoded string representation (space encoded as %20)
+     * Suitable for application/x-www-form-urlencoded content
+     * @returns {string} The encoded form data
+     * @example
+     * form.str(); // returns "foo=bar&baz=qux"
+     */
     str(){
         return this.data.toString().replace(/\+/g, '%20');
     }
+    /**
+     * Returns the underlying URLSearchParams object
+     * @returns {URLSearchParams} The native URLSearchParams instance
+     */
     url(){
         return this.data;
     }
 }
 
+/**
+ * Generates a signed download token using a modified RC4-like algorithm
+ *
+ * This function implements a stream cipher similar to RC4 that:
+ * 1. Initializes a permutation array using the secret key (s1)
+ * 2. Generates a pseudorandom keystream
+ * 3. XORs the input data (s2) with the keystream
+ * 4. Returns the result as a Base64-encoded string
+ *
+ * @param {string} s1 - The secret key used for signing (should be at least 1 character)
+ * @param {string} s2 - The input data to be signed
+ * @returns {string} Base64-encoded signature
+ * @example
+ * const signature = signDownload('secret-key', 'data-to-sign');
+ * // Returns something like: "X3p8YFJjUA=="
+ */
 function signDownload(s1, s2) {
+    // Initialize permutation array (p) and key array (a)
     const p = new Uint8Array(256);
     const a = new Uint8Array(256);
     const result = [];
     
+    // Key-scheduling algorithm (KSA)
+    // Initialize the permutation array with the secret key
     Array.from({ length: 256 }, (_, i) => {
         a[i] = s1.charCodeAt(i % s1.length);
         p[i] = i;
     });
     
+    // Scramble the permutation array using the key
     let j = 0;
     Array.from({ length: 256 }, (_, i) => {
         j = (j + p[i] + a[i]) % 256;
         [p[i], p[j]] = [p[j], p[i]]; // swap
     });
     
+    // Pseudo-random generation algorithm (PRGA)
+    // Generate keystream and XOR with input data
     let i = 0; j = 0;
     Array.from({ length: s2.length }, (_, q) => {
         i = (i + 1) % 256;
@@ -62,14 +135,52 @@ function signDownload(s1, s2) {
         result.push(s2.charCodeAt(q) ^ k);
     });
     
+    // Return the result as Base64
     return Buffer.from(result).toString('base64');
 }
 
+/**
+ * Validates whether a string is a properly formatted MD5 hash
+ *
+ * Checks if the input:
+ * 1. Is exactly 32 characters long
+ * 2. Contains only hexadecimal characters (a-f, 0-9)
+ * 3. Is in lowercase
+ *
+ * Note: This only validates the format, not the cryptographic correctness of the hash.
+ *
+ * @param {*} md5 - The value to check (typically a string)
+ * @returns {boolean} True if the input is a valid MD5 format, false otherwise
+ * @example
+ * checkMd5val('d41d8cd98f00b204e9800998ecf8427e') // returns true
+ * checkMd5val('D41D8CD98F00B204E9800998ECF8427E') // returns false (uppercase)
+ * checkMd5val('z41d8cd98f00b204e9800998ecf8427e') // returns false (invalid character)
+ * checkMd5val('d41d8cd98f')                      // returns false (too short)
+ */
 function checkMd5val(md5){
     if(typeof md5 !== 'string') return false;
     return /^[a-f0-9]{32}$/.test(md5);
 }
 
+/**
+ * Validates that all elements in an array are properly formatted MD5 hashes
+ *
+ * Checks if:
+ * 1. The input is an array
+ * 2. Every element in the array passes checkMd5val() validation
+ *    (32-character hexadecimal strings in lowercase)
+ *
+ * @param {*} arr - The array to validate
+ * @returns {boolean} True if all elements are valid MD5 hashes, false otherwise
+ *                   (also returns false if input is not an array)
+ * @see checkMd5val For individual MD5 hash validation logic
+ *
+ * @example
+ * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', '5d41402abc4b2a76b9719d911017c592']) // true
+ * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', 'invalid']) // false
+ * checkMd5arr('not an array') // false
+ * checkMd5arr([]) // true (empty array is considered valid)
+ */
 function checkMd5arr(arr) {
     if (!Array.isArray(arr)) return false;
     return arr.every(item => {
@@ -77,43 +188,116 @@ function checkMd5arr(arr) {
     });
 }
 
+/**
+ * Applies a custom transformation to what appears to be an MD5 hash
+ *
+ * This function performs a series of reversible transformations on an input string
+ * that appears to be an MD5 hash (32 hexadecimal characters). The transformation includes:
+ * 1. Character restoration at position 9
+ * 2. XOR operation with position-dependent values
+ * 3. Byte reordering of the result
+ *
+ * @param {string} md5 - The input string (expected to be 32 hexadecimal characters)
+ * @returns {string} The transformed result (32 hexadecimal characters)
+ * @throws Will return the original input unchanged if length is not 32
+ *
+ * @example
+ * decryptMd5('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6') // returns transformed value
+ * decryptMd5('short') // returns 'short' (unchanged)
+ */
 function decryptMd5(md5) {
+    // Return unchanged if not 32 characters
     if (md5.length !== 32) return md5;
     
+    // Restore character at position 9
     const restoredHexChar = (md5.charCodeAt(9) - 'g'.charCodeAt(0)).toString(16);
     const o = md5.slice(0, 9) + restoredHexChar + md5.slice(10);
     
+    // Apply XOR transformation to each character
     let n = '';
     for (let i = 0; i < o.length; i++) {
         const orig = parseInt(o[i], 16) ^ (i & 15);
         n += orig.toString(16);
     }
     
+    // Reorder the bytes in the result
     const e =
-        n.slice(8, 16) + // original e[0..7]
-        n.slice(0, 8) +  // original e[8..15]
-        n.slice(24, 32) + // original e[16..23]
-        n.slice(16, 24);  // original e[24..31]
+        n.slice(8, 16) +  // original bytes 8-15 (now first)
+        n.slice(0, 8) +   // original bytes 0-7 (now second)
+        n.slice(24, 32) + // original bytes 24-31 (now third)
+        n.slice(16, 24);   // original bytes 16-23 (now last)
     
     return e;
 }
 
-function changeBase64Type(str, mode = 1){
+/**
+ * Converts between standard and URL-safe Base64 encoding formats
+ *
+ * Base64 strings may contain '+', '/' and '=' characters that need to be replaced
+ * for safe use in URLs. This function provides bidirectional conversion:
+ * - Mode 1: Converts to URL-safe Base64 (RFC 4648 §5)
+ * - Mode 2: Converts back to standard Base64
+ *
+ * @param {string} str - The Base64 string to convert
+ * @param {number} [mode=1] - Conversion direction:
+ *                            1 = to URL-safe (default),
+ *                            2 = to standard
+ * @returns {string} The converted Base64 string
+ *
+ * @example
+ * // To URL-safe Base64
+ * changeBase64Type('a+b/c=') // returns 'a-b_c='
+ *
+ * // To standard Base64
+ * changeBase64Type('a-b_c=', 2) // returns 'a+b/c='
+ *
+ * @see {@link https://tools.ietf.org/html/rfc4648#section-5|RFC 4648 §5} for URL-safe Base64
+ */
+function changeBase64Type(str, mode = 1) {
     return mode === 1
         ? str.replace(/\+/g, '-').replace(/\//g, '_')  // to url-safe
-        : str.replace(/-/g,  '+').replace(/_/g,  '/'); // to url-unsafe
+        : str.replace(/-/g,  '+').replace(/_/g,  '/'); // to standard
 }
 
+/**
+ * Decrypts AES-128-CBC encrypted data using provided parameters
+ *
+ * This function:
+ * 1. Converts both parameters from URL-safe Base64 to standard Base64
+ * 2. Extracts the IV (first 16 bytes) and ciphertext from pp1
+ * 3. Uses pp2 as the decryption key
+ * 4. Performs AES-128-CBC decryption
+ *
+ * @param {string} pp1 - Combined IV and ciphertext in URL-safe Base64 format:
+ *                      First 16 bytes are IV, remainder is ciphertext
+ * @param {string} pp2 - Encryption key in URL-safe Base64 format
+ * @returns {string} The decrypted UTF-8 string
+ * @throws {Error} May throw errors for invalid inputs or decryption failures
+ *
+ * @example
+ * // Example usage (with actual encrypted data)
+ * const decrypted = decryptAES(
+ *     'MTIzNDU2Nzg5MDEyMzQ1Ng==...',  // IV + ciphertext
+ *     'c2VjcmV0LWtleS1kYXRhCg=='      // Key
+ * );
+ *
+ * @requires crypto Node.js crypto module
+ * @see changeBase64Type For Base64 format conversion
+ */
 function decryptAES(pp1, pp2) {
+    // Convert from URL-safe Base64 to standard Base64
     pp1 = changeBase64Type(pp1, 2);
     pp2 = changeBase64Type(pp2, 2);
     
+    // Extract ciphertext (after first 16 bytes) and IV (first 16 bytes)
     const cipherText = pp1.substring(16);
     const key = Buffer.from(pp2, 'utf8');
     const iv = Buffer.from(pp1.substring(0, 16), 'utf8');
     
+    // Create decipher with AES-128-CBC algorithm
     const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
     
+    // Perform decryption
     let decrypted = decipher.update(cipherText, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
     
@@ -121,20 +305,40 @@ function decryptAES(pp1, pp2) {
 }
 
 /**
- * RSA encryption of a string using a public key (in PEM format)
- * @param {string} message - the original message to encrypt
- * @param {string} publicKeyPEM - the RSA public key in PEM format
- * @param {number} mode - if 2 → apply MD5 hash + md5LenPad, otherwise encrypt directly
- * @returns {string} base64-encoded encrypted data
+ * Encrypts data using RSA with a public key, with optional MD5 preprocessing
+ *
+ * Supports two encryption modes:
+ * 1. Direct encryption of the message (default)
+ * 2. MD5 hash preprocessing (applies MD5 + length padding before encryption)
+ *
+ * @param {string} message - The plaintext message to encrypt
+ * @param {string|Buffer} publicKeyPEM - RSA public key in PEM format
+ * @param {number} [mode=1] - Encryption mode:
+ *                            1 = direct encryption,
+ *                            2 = MD5 hash preprocessing
+ * @returns {string} Base64-encoded encrypted data
+ * @throws {Error} May throw errors for invalid keys or encryption failures
+ *
+ * @example
+ * // Direct encryption
+ * encryptRSA('secret message', publicKey);
+ *
+ * // With MD5 preprocessing
+ * encryptRSA('secret message', publicKey, 2);
+ *
+ * @requires crypto Node.js crypto module
  */
 function encryptRSA(message, publicKeyPEM, mode = 1) {
+    // Mode 2: Apply MD5 hash and length padding
     if (mode === 2) {
         const md5 = crypto.createHash('md5').update(message).digest('hex');
         message = md5 + (md5.length<10?'0':'') + md5.length;
     }
     
+    // Convert message to Buffer
     const buffer = Buffer.from(message, 'utf8');
     
+    // Perform RSA encryption
     const encrypted = crypto.publicEncrypt({
             key: publicKeyPEM,
             padding: crypto.constants.RSA_PKCS1_PADDING,
@@ -142,28 +346,89 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
         buffer,
     );
     
+    // Return as Base64 string
     return encrypted.toString('base64');
 }
 
+/**
+ * Generates a pseudo-random SHA-1 hash from combined client parameters
+ *
+ * Creates a deterministic hash value by combining multiple client-specific parameters.
+ * This is typically used for generating session tokens or unique identifiers.
+ *
+ * @param {string} [client='web'] - Client identifier (e.g., 'web', 'mobile')
+ * @param {string} seval - Session evaluation parameter
+ * @param {string} encpwd - Encrypted password or password hash
+ * @param {string} email - User's email address
+ * @param {string} [browserid=''] - Browser fingerprint or identifier
+ * @param {string} random - Random value
+ * @returns {string} SHA-1 hash of the combined parameters (40-character hex string)
+ *
+ * @example
+ * // Basic usage
+ * const token = prandGen('web', 'session123', 'encryptedPwd', 'user@example.com', 'browser123', 'randomValue');
+ *
+ * // With default client and empty browserid
+ * const token = prandGen(undefined, 'session123', 'encryptedPwd', 'user@example.com', '', 'randomValue');
+ *
+ * @requires crypto Node.js crypto module
+ */
 function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) {
+    // Combine all parameters with hyphens
     const combined = `${client}-${seval}-${encpwd}-${email}-${browserid}-${random}`;
+    
+    // Generate SHA-1 hash and return as hex string
     return crypto.createHash('sha1').update(combined).digest('hex');
 }
 
+/**
+ * TeraBox API Client Class
+ *
+ * Provides a comprehensive interface for interacting with TeraBox services,
+ * including encryption utilities, API request handling, and session management.
+ *
+ * @class
+ * @property {object} FormUrlEncoded - Form URL encoding utility
+ * @property {function} SignDownload - Download signature generator
+ * @property {function} CheckMd5Val - MD5 hash validator (single)
+ * @property {function} CheckMd5Arr - MD5 hash validator (array)
+ * @property {function} DecryptMd5 - Custom MD5 transformation
+ * @property {function} ChangeBase64Type - Base64 format converter
+ * @property {function} DecryptAES - AES decryption utility
+ * @property {function} EncryptRSA - RSA encryption utility
+ * @property {function} PRandGen - Pseudo-random hash generator
+ * @property {number} TERABOX_TIMEOUT - Default API timeout (10 seconds)
+ */
 class TeraBoxApp {
+    // Encryption/Utility Methods 1
     FormUrlEncoded = FormUrlEncoded;
     SignDownload = signDownload;
     CheckMd5Val = checkMd5val;
     CheckMd5Arr = checkMd5arr;
     DecryptMd5 = decryptMd5;
     
+    // Encryption/Utility Methods 2
     ChangeBase64Type = changeBase64Type;
     DecryptAES = decryptAES;
     EncryptRSA = encryptRSA;
     PRandGen = prandGen;
     
+    /**
+     * Default API timeout in milliseconds (10 seconds)
+     * @type {number}
+     */
     TERABOX_TIMEOUT = 10000;
     
+    /**
+     * Application data including tokens and keys
+     * @type {Object}
+     * @property {string} csrf - CSRF token
+     * @property {string} logid - Log ID
+     * @property {string} pcftoken - PCF token
+     * @property {string} bdstoken - BDS token
+     * @property {string} jsToken - JavaScript token
+     * @property {string} pubkey - Public key
+     */
     data = {
         csrf: '',
         logid: '0',
@@ -172,6 +437,31 @@ class TeraBoxApp {
         jsToken: '',
         pubkey: '',
     };
+    
+    /**
+     * Application parameters and configuration
+     * @type {Object}
+     * @property {string} whost - Web host URL
+     * @property {string} uhost - Upload host URL
+     * @property {string} lang - Language setting
+     * @property {Object} app - Application settings
+     * @property {number} app.app_id - Application ID
+     * @property {number} app.web - Web flag
+     * @property {string} app.channel - Channel identifier
+     * @property {number} app.clienttype - Client type
+     * @property {string} ver_android - Android version
+     * @property {string} ua - User agent string
+     * @property {string} cookie - Cookie string
+     * @property {Object} auth - Authentication data
+     * @property {number} account_id - Account ID
+     * @property {string} account_name - Account name
+     * @property {boolean} is_vip - VIP status flag
+     * @property {number} vip_type - VIP type
+     * @property {number} space_used - Used space in bytes
+     * @property {number} space_total - Total space in bytes
+     * @property {number} space_available - Available space in bytes
+     * @property {string} cursor - Cursor for pagination
+     */
     params = {
         whost: 'https://www.terabox.com',
         uhost: 'https://c-jp.terabox.com',
@@ -196,6 +486,12 @@ class TeraBoxApp {
         cursor: 'null',
     };
     
+    /**
+     * Creates a new TeraBoxApp instance
+     * @param {string} authData - Authentication data (NDUS token)
+     * @param {string} [authType='ndus'] - Authentication type (currently only 'ndus' supported)
+     * @throws {Error} Throws error if authType is not supported
+     */
     constructor(authData, authType = 'ndus') {
         this.params.cookie = `lang=${this.params.lang}`;
         if(authType === 'ndus'){
@@ -206,6 +502,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Updates application data including tokens and user information
+     * @param {string} [customPath] - Custom path to use for the update request
+     * @returns {Promise<Object>} The updated template data
+     * @async
+     * @throws {Error} Throws error if request fails or parsing fails
+     */
     async updateAppData(customPath){
         const url = new URL(this.params.whost + (customPath ? `/${customPath}` : '/main'));
         
@@ -274,6 +577,10 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Sets default VIP parameters
+     * @returns {void}
+     */
     setVipDefaults(){
         this.params.is_vip = true;
         this.params.vip_type = 2;
@@ -281,6 +588,15 @@ class TeraBoxApp {
         this.params.space_available = Math.pow(1024, 3) * 2;
     }
     
+    /**
+     * Makes an API request with retry logic
+     * @param {string} req_url - The request URL (relative to whost)
+     * @param {Object} [req_options={}] - Request options (headers, body, etc.)
+     * @param {number} [retries=4] - Number of retry attempts
+     * @returns {Promise<Object>} The JSON-parsed response data
+     * @async
+     * @throws {Error} Throws error if all retries fail
+     */
     async doReq(req_url, req_options = {}, retries = 4){
         const url = new URL(this.params.whost + req_url);
         let reqm_options = structuredClone(req_options);
@@ -338,6 +654,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves system configuration from the TeraBox API
+     * @returns {Promise<Object>} The system configuration JSON data
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getSysCfg(){
         const url = new URL(this.params.whost + '/api/getsyscfg');
         url.search = new URLSearchParams({
@@ -368,6 +690,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Checks login status of the current session
+     * @returns {Promise<Object>} The login status JSON data
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async checkLogin(){
         const url = new URL(this.params.whost + '/api/check/login');
         
@@ -395,6 +723,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Initiates the pre-login step for passport authentication
+     * @param {string} email - The user's email address
+     * @returns {Promise<Object>} The pre-login data JSON (includes seval, random, timestamp)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async passportPreLogin(email){
         const url = new URL(this.params.whost + '/passport/prelogin');
         const authUrl = 'wap/outlogin/login';
@@ -434,6 +769,15 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Completes the passport login process using preLoginData and password
+     * @param {Object} preLoginData - Data returned from passportPreLogin (seval, random, timestamp)
+     * @param {string} email - The user's email address
+     * @param {string} pass - The user's plaintext password
+     * @returns {Promise<Object>} The login response JSON (includes ndus token on success)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async passportLogin(preLoginData, email, pass){
         const url = new URL(this.params.whost + '/passport/login');
         
@@ -496,6 +840,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Sends a registration code to the specified email
+     * @param {string} email - The email address to send the code to
+     * @returns {Promise<Object>} The send code response JSON (includes code and message)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async regSendCode(email){
         const url = new URL(this.params.whost + '/passport/register_v4/sendcode');
         const emailRegUrl = 'wap/outlogin/emailRegister';
@@ -504,7 +855,7 @@ class TeraBoxApp {
             if(this.data.pcftoken === ''){
                 await this.updateAppData(emailRegUrl);
             }
-        
+            
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
@@ -540,6 +891,14 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Verifies the registration code received via email
+     * @param {string} regToken - Registration token from send code response
+     * @param {string|number} code - The verification code sent to email
+     * @returns {Promise<Object>} The verification response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async regVerify(regToken, code){
         const url = new URL(this.params.whost + '/passport/register_v4/verify');
         
@@ -578,6 +937,14 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Completes the registration process by setting a password
+     * @param {string} regToken - Registration token from verification step
+     * @param {string} pass - The new password to set
+     * @returns {Promise<Object>} The finish registration response JSON (includes ndus token on success)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async regFinish(regToken, pass){
         const url = new URL(this.params.whost + '/passport/register_v4/finish');
         
@@ -634,6 +1001,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves passport user information for the current session
+     * @returns {Promise<Object>} The passport user info JSON (includes display_name)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async passportGetInfo(){
         const url = new URL(this.params.whost + '/passport/get_info');
         
@@ -661,6 +1034,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Fetches membership information for the current user
+     * @returns {Promise<Object>} The membership JSON (includes VIP status)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async userMembership(){
         const url = new URL(this.params.whost + '/rest/2.0/membership/proxy/user');
         url.search = new URLSearchParams({
@@ -695,6 +1074,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves current user information (username, VIP status)
+     * @returns {Promise<Object>} The user info JSON (includes records array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getCurrentUserInfo(){
         try{
             if(this.params.account_id === 0){
@@ -715,6 +1100,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves information for a specific user ID
+     * @param {number|string} user_id - The user ID to look up
+     * @returns {Promise<Object>} The user info JSON (includes data)
+     * @async
+     * @throws {Error} Throws error if user_id is invalid, HTTP status is not 200, or request fails
+     */
     async getUserInfo(user_id){
         user_id = parseInt(user_id);
         const url = new URL(this.params.whost + '/api/user/getinfo');
@@ -749,6 +1141,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves storage quota information for the current account
+     * @returns {Promise<Object>} The quota JSON (includes total, used, available)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getQuota(){
         const url = new URL(this.params.whost + '/api/quota');
         url.search = new URLSearchParams({
@@ -783,6 +1181,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves the user's coins count (points)
+     * @returns {Promise<Object>} The coins count JSON (includes records of coin usage)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getCoinsCount(){
         const url = new URL(this.params.whost + '/rest/1.0/inte/system/getrecord');
         
@@ -807,6 +1211,14 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves the contents of a remote directory
+     * @param {string} remoteDir - Remote directory path to list
+     * @param {number} [page=1] - Page number for pagination
+     * @returns {Promise<Object>} The directory listing JSON (includes entries array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getRemoteDir(remoteDir, page = 1){
         const url = new URL(this.params.whost + '/api/list');
         url.search = new URLSearchParams({
@@ -846,6 +1258,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves the contents of the recycle bin
+     * @returns {Promise<Object>} The recycle bin listing JSON (includes entries array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getRecycleBin(){
         const url = new URL(this.params.whost + '/api/recycle/list');
         url.search = new URLSearchParams({
@@ -878,6 +1296,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Clears all items in the recycle bin
+     * @returns {Promise<Object>} The clear recycle bin response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async clearRecycleBin(){
         const url = new URL(this.params.whost + '/api/recycle/clear');
         url.search = new URLSearchParams({
@@ -907,6 +1331,22 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Initiates a precreate request for a file (reserve upload ID and pre-upload checks)
+     * @param {Object} data - File data including remote_dir, file, size, upload_id (optional), and hash info
+     * @param {string} data.remote_dir - Remote directory path
+     * @param {string} data.file - Filename
+     * @param {number} data.size - File size in bytes
+     * @param {string} [data.upload_id] - Existing upload ID for resuming
+     * @param {Object} data.hash - Hash information
+     * @param {string} data.hash.file - MD5 hash of full file
+     * @param {string} data.hash.slice - MD5 hash of first slice
+     * @param {number} data.hash.crc32 - CRC32 value
+     * @param {Array<string>} data.hash.chunks - Array of MD5 chunk hashes
+     * @returns {Promise<Object>} The precreate response JSON (includes upload_id, etc.)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async precreateFile(data){
         const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
@@ -980,6 +1420,21 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Attempts a rapid upload using existing file hashes (skip actual upload if file already on server)
+     * @param {Object} data - File data including remote_dir, file, size, and hash info
+     * @param {string} data.remote_dir - Remote directory path
+     * @param {string} data.file - Filename
+     * @param {number} data.size - File size in bytes
+     * @param {Object} data.hash - Hash information
+     * @param {string} data.hash.file - MD5 hash of full file
+     * @param {string} data.hash.slice - MD5 hash of first slice
+     * @param {number} data.hash.crc32 - CRC32 value
+     * @param {Array<string>} [data.hash.chunks] - Array of MD5 chunk hashes
+     * @returns {Promise<Object>} The rapid upload response JSON (indicates success or fallback)
+     * @async
+     * @throws {Error} Throws error if file size < 256KB, invalid hashes, HTTP status is not 200, or request fails
+     */
     async rapidUpload(data){
         const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
@@ -1043,6 +1498,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves an upload host endpoint to use for file uploads
+     * @returns {Promise<Object>} The upload host response JSON (includes host field)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getUploadHost(){
         const url = new URL(this.params.whost + '/rest/2.0/pcs/file?method=locateupload');
         try{
@@ -1067,6 +1528,17 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Uploads a single chunk (part) of a file
+     * @param {Object} data - File data including remote_dir, file, upload_id
+     * @param {number} partseq - The sequence number of this chunk (0-based)
+     * @param {Blob|Buffer} blob - The binary data of the chunk
+     * @param {function} [reqHandler] - Optional request progress handler
+     * @param {AbortSignal} [externalAbort] - Optional external abort signal
+     * @returns {Promise<Object>} The upload chunk response JSON (includes MD5 for chunk)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200, chunk upload fails, or request times out
+     */
     async uploadChunk(data, partseq, blob, reqHandler, externalAbort) {
         const timeoutAborter = new AbortController;
         const timeoutId = setTimeout(() => { timeoutAborter.abort(); }, this.TERABOX_TIMEOUT);
@@ -1116,6 +1588,13 @@ class TeraBoxApp {
         return res;
     }
     
+    /**
+     * Creates a new directory in the remote file system
+     * @param {string} remoteDir - The path of the directory to create
+     * @returns {Promise<Object>} The create directory response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async createDir(remoteDir){
         const formData = new this.FormUrlEncoded();
         formData.append('path', remoteDir);
@@ -1153,6 +1632,22 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Creates a new file entry on the server after uploading chunks
+     * @param {Object} data - File data including remote_dir, file, size, hash, upload_id, and chunks
+     * @param {string} data.remote_dir - Remote directory path
+     * @param {string} data.file - Filename
+     * @param {number} data.size - File size in bytes
+     * @param {Object} data.hash - Hash information
+     * @param {string} data.hash.file - MD5 hash of full file
+     * @param {string} data.hash.slice - MD5 hash of first slice
+     * @param {number} data.hash.crc32 - CRC32 value
+     * @param {Array<string>} data.hash.chunks - Array of MD5 chunk hashes
+     * @param {string} data.upload_id - Upload ID obtained from precreate
+     * @returns {Promise<Object>} The create file response JSON (includes MD5 and ETag)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async createFile(data) {
         const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
@@ -1226,6 +1721,14 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Performs file management operations (delete, copy, move, rename)
+     * @param {string} operation - Operation type: 'delete', 'copy', 'move', 'rename'
+     * @param {Array} fmparams - Parameters for the operation (array of paths or objects)
+     * @returns {Promise<Object>} The file manager response JSON
+     * @async
+     * @throws {Error} Throws error if fmparams is not an array, HTTP status is not 200, or request fails
+     */
     async filemanager(operation, fmparams){
         const url = new URL(this.params.whost + '/api/filemanager');
         url.search = new URLSearchParams({
@@ -1279,6 +1782,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves a list of shares created by the user
+     * @returns {Promise<Object>} The share list JSON (includes share entries)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async shareList(){
         const url = new URL(this.params.whost + '/share/teratransfer/sharelist');
         url.search = new URLSearchParams({
@@ -1294,7 +1803,7 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-    
+            
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1303,6 +1812,15 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Sets sharing parameters (e.g., password, expiration) for specified files
+     * @param {Array<string>} filelist - Array of file paths to share
+     * @param {string} [pass=''] - Optional 4-character alphanumeric password
+     * @param {number} [period=0] - Sharing period in days (0 for no expiration)
+     * @returns {Promise<Object>} The share set response JSON (includes share IDs)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async shareSet(filelist, pass = '', period = 0){
         const url = new URL(this.params.whost + '/share/pset');
         url.search = new URLSearchParams({
@@ -1338,7 +1856,7 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-    
+            
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1347,6 +1865,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Cancels existing shares by share ID
+     * @param {Array<number>} [shareid_list=[]] - Array of share IDs to cancel
+     * @returns {Promise<Object>} The share cancel response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async shareCancel(shareid_list = []){
         const url = new URL(this.params.whost + '/share/cancel');
         url.search = new URLSearchParams({
@@ -1371,7 +1896,7 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-    
+            
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1380,6 +1905,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves information for a shortened URL share
+     * @param {string} shareId - The share url
+     * @returns {Promise<Object>} The short URL info JSON (includes file list, permissions)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async shortUrlInfo(shareId){
         const url = new URL(this.params.whost + '/api/shorturlinfo');
         url.search = new URLSearchParams({
@@ -1414,6 +1946,15 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Lists files under a shortened URL share
+     * @param {string} shareId - The share url
+     * @param {string} [remoteDir=''] - Remote directory under share (empty for root)
+     * @param {number} [page=1] - Page number for pagination
+     * @returns {Promise<Object>} The short URL file list JSON (includes entries array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async shortUrlList(shareId, remoteDir, page = 1){
         remoteDir = remoteDir || ''
         const url = new URL(this.params.whost + '/share/list');
@@ -1457,6 +1998,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves file difference (delta) information for synchronization
+     * @returns {Promise<Object>} The file diff JSON (includes entries, request_id, has_more flag)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200, request fails, or on recursive errors
+     */
     async fileDiff(){
         const formData = new this.FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
@@ -1518,6 +2065,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Generates a PAN token for subsequent API requests
+     * @returns {Promise<Object>} The PAN token response JSON (includes pan token and expire)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async genPanToken(){
         const url = new URL(this.params.whost + '/api/pantoken');
         url.search = new URLSearchParams({
@@ -1547,6 +2100,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves home page information (user info, sign data)
+     * @returns {Promise<Object>} The home info JSON (includes sign1, sign3, data.signb)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getHomeInfo(){
         const url = new URL(this.params.whost + '/api/home/info');
         url.search = new URLSearchParams({
@@ -1580,6 +2139,14 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Initiates a download request for specified file IDs
+     * @param {Array<number>} fs_ids - Array of file system IDs to download
+     * @param {string} signb - Base64-encoded signature from getHomeInfo
+     * @returns {Promise<Object>} The download response JSON (includes dlink URLs)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async download(fs_ids, signb){
         const url = new URL(this.params.whost + '/api/download');
         
@@ -1621,6 +2188,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves metadata for specified remote files
+     * @param {Array<Object>} remote_file_list - Array of file descriptor objects { fs_id, path, etc. }
+     * @returns {Promise<Object>} The file metadata JSON (includes size, md5, etc.)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getFileMeta(remote_file_list){
         const url = new URL(this.params.whost + '/api/filemetas');
         
@@ -1654,6 +2228,13 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves a list of recent uploads for the account
+     * @param {number} [page=1] - Page number for pagination
+     * @returns {Promise<Object>} The recent uploads JSON (includes records array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getRecentUploads(page = 1){
         const url = new URL(this.params.whost + '/rest/recent/listall');
         url.search = new URLSearchParams({
@@ -1687,6 +2268,12 @@ class TeraBoxApp {
         }
     }
     
+    /**
+     * Retrieves the RSA public key from the server for encryption
+     * @returns {Promise<Object>} The public key response JSON (includes pp1 and pp2)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
     async getPublicKey(){
         const url = new URL(this.params.whost + '/passport/getpubkey');
         try{
