@@ -208,7 +208,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
             const skipChunkHashCheck = typeof data.hash_check === 'boolean' && data.hash_check === false;
             if(!app.CheckMd5Val(chunkMd5) && !skipChunkHashCheck){
                 const calcChunkMd5 = crypto.createHash('md5').update(buffer).digest('hex');
-                if(calcChunkMd5 != res.md5){
+                if(calcChunkMd5 !== res.md5){
                     const md5Err = md5MismatchText(calcChunkMd5, res.md5, partSeq+1, data.hash.chunks.length)
                     throw new Error(md5Err.join('\n\t'));
                 }
