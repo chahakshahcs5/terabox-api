@@ -940,7 +940,7 @@ class TeraBoxApp {
     /**
      * Completes the registration process by setting a password
      * @param {string} regToken - Registration token from verification step
-     * @param {string} pass - The new password to set
+     * @param {string} pass - The new password to set, length is 6-15 and contains at least 1 Latin letter
      * @returns {Promise<Object>} The finish registration response JSON (includes ndus token on success)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
@@ -951,6 +951,10 @@ class TeraBoxApp {
         try{
             if(this.data.pubkey === ''){
                 await this.getPublicKey();
+            }
+            
+            if(typeof pass !== 'string' || pass.length < 6 || pass.length > 15 || !pass.match(/[a-z]/i)){
+                return { code: -2, logid: 0, msg: 'invalid password', };
             }
             
             const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
