@@ -571,7 +571,7 @@ class TeraBoxApp {
         catch(error){
             if(error.name === 'TimeoutError' && retries > 0){
                 await new Promise(resolve => setTimeout(resolve, 500));
-                return this.updateAppData(customPath, retries - 1);
+                return await this.updateAppData(customPath, retries - 1);
             }
             const errorPrefix = '[ERROR] Failed to update jsToken:';
             if(error.name === 'TimeoutError'){
