@@ -179,10 +179,11 @@ function checkMd5val(md5){
  * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', '5d41402abc4b2a76b9719d911017c592']) // true
  * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', 'invalid']) // false
  * checkMd5arr('not an array') // false
- * checkMd5arr([]) // true (empty array is considered valid)
+ * checkMd5arr([]) // false (empty array is considered invalid)
  */
 function checkMd5arr(arr) {
     if (!Array.isArray(arr)) return false;
+    if (arr.length === 0) return false;
     return arr.every(item => {
         return checkMd5val(item);
     });
@@ -202,10 +203,10 @@ function checkMd5arr(arr) {
  * @throws Will return the original input unchanged if length is not 32
  *
  * @example
- * decryptMd5('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6') // returns transformed value
- * decryptMd5('short') // returns 'short' (unchanged)
+ * decodeMd5('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6') // returns transformed value
+ * decodeMd5('short') // returns 'short' (unchanged)
  */
-function decryptMd5(md5) {
+function decodeMd5(md5) {
     // Return unchanged if not 32 characters
     if (md5.length !== 32) return md5;
     
@@ -392,7 +393,7 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * @property {function} SignDownload - Download signature generator
  * @property {function} CheckMd5Val - MD5 hash validator (single)
  * @property {function} CheckMd5Arr - MD5 hash validator (array)
- * @property {function} DecryptMd5 - Custom MD5 transformation
+ * @property {function} DecodeMd5 - Custom MD5 transformation
  * @property {function} ChangeBase64Type - Base64 format converter
  * @property {function} DecryptAES - AES decryption utility
  * @property {function} EncryptRSA - RSA encryption utility
@@ -405,7 +406,7 @@ class TeraBoxApp {
     SignDownload = signDownload;
     CheckMd5Val = checkMd5val;
     CheckMd5Arr = checkMd5arr;
-    DecryptMd5 = decryptMd5;
+    DecodeMd5 = decodeMd5;
     
     // Encryption/Utility Methods 2
     ChangeBase64Type = changeBase64Type;
@@ -1709,7 +1710,7 @@ class TeraBoxApp {
                 // encrypted etag
                 rdata.emd5 = rdata.md5;
                 // decrypted etag (without chunk count)
-                rdata.md5 = this.DecryptMd5(rdata.emd5);
+                rdata.md5 = this.DecodeMd5(rdata.emd5);
                 // set custom etag
                 rdata.etag = rdata.md5;
                 if(data.hash.chunks.length > 1){
