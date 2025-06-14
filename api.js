@@ -1504,6 +1504,49 @@ class TeraBoxApp {
     }
     
     /**
+     * Attempts a upload file from remote server
+     * @param {string} urls - Source urls (coma-separated)
+     * @param {string} remote_dir - Remote directory path
+     * @returns {Promise<Object>} The remote upload response JSON (indicates success or fallback)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200, or request fails
+     */
+    async remoteUpload(urls, remote_dir = '/Remote Upload'){
+        const formData = new this.FormUrlEncoded();
+        formData.append('urls', urls);
+        formData.append('upload_to', remote_dir);
+        
+        const url = new URL(this.params.whost + '/webmaster/remoteupload/submit');
+        // url.search = new URLSearchParams({
+        //     ...this.params.app,
+        //     jsToken: this.data.jsToken,
+        // });
+        
+        try{
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('remoteUpload', { cause: error });
+        }
+    }
+    
+    /**
      * Retrieves an upload host endpoint to use for file uploads
      * @returns {Promise<Object>} The upload host response JSON (includes host field)
      * @async
