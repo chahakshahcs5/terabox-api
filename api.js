@@ -506,11 +506,12 @@ class TeraBoxApp {
     /**
      * Updates application data including tokens and user information
      * @param {string} [customPath] - Custom path to use for the update request
+     * @param {number} [retries=4] - Number of retry attempts
      * @returns {Promise<Object>} The updated template data
      * @async
      * @throws {Error} Throws error if request fails or parsing fails
      */
-    async updateAppData(customPath){
+    async updateAppData(customPath, retries = 4){
         const url = new URL(this.params.whost + (customPath ? `/${customPath}` : '/main'));
         
         try{
@@ -519,7 +520,7 @@ class TeraBoxApp {
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
                 },
-                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT * 2),
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT + 10000),
             });
             
             if(req.headers['set-cookie']){
@@ -568,6 +569,10 @@ class TeraBoxApp {
             return tdata;
         }
         catch(error){
+            if(error.name === 'TimeoutError' && retries > 0){
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return this.updateAppData(customPath, retries - 1);
+            }
             const errorPrefix = '[ERROR] Failed to update jsToken:';
             if(error.name === 'TimeoutError'){
                 console.error(errorPrefix, error.message);
