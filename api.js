@@ -105,36 +105,37 @@ class FormUrlEncoded {
  * // Returns something like: "X3p8YFJjUA=="
  */
 function signDownload(s1, s2) {
-    const a = new Uint8Array(256);
+    // Initialize permutation array (p) and key array (a)
     const p = new Uint8Array(256);
+    const a = new Uint8Array(256);
     const result = [];
-    const v = s1.length;
     
     // Key-scheduling algorithm (KSA)
-    for (let q = 0; q < 256; q++) {
-        a[q] = s1.charCodeAt(q % v);
-        p[q] = q;
-    }
+    // Initialize the permutation array with the secret key
+    Array.from({ length: 256 }, (_, i) => {
+        a[i] = s1.charCodeAt(i % s1.length);
+        p[i] = i;
+    });
     
-    // Scramble the permutation array
-    let u = 0;
-    for (let q = 0; q < 256; q++) {
-        u = (u + p[q] + a[q]) % 256;
-        [p[q], p[u]] = [p[u], p[q]]; // Swap
-    }
+    // Scramble the permutation array using the key
+    let j = 0;
+    Array.from({ length: 256 }, (_, i) => {
+        j = (j + p[i] + a[i]) % 256;
+        [p[i], p[j]] = [p[j], p[i]]; // swap
+    });
     
     // Pseudo-random generation algorithm (PRGA)
-    let i = 0;
-    u = 0;
-    for (let q = 0; q < s2.length; q++) {
+    // Generate keystream and XOR with input data
+    let i = 0; j = 0;
+    Array.from({ length: s2.length }, (_, q) => {
         i = (i + 1) % 256;
-        u = (u + p[i]) % 256;
-        [p[i], p[u]] = [p[u], p[i]]; // Swap
-        const k = p[(p[i] + p[u]) % 256];
+        j = (j + p[i]) % 256;
+        [p[i], p[j]] = [p[j], p[i]]; // swap
+        const k = p[(p[i] + p[j]) % 256];
         result.push(s2.charCodeAt(q) ^ k);
-    }
+    });
     
-    // Convert to Base64 (browser and Node.js compatible)
+    // Return the result as Base64
     return Buffer.from(result).toString('base64');
 }
 
