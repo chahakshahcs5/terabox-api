@@ -1471,7 +1471,7 @@ class TeraBoxApp {
         if(!this.CheckMd5Arr(data.hash.chunks)){
             // use unsafe rapid upload if we don't have chunks hash
             formData.delete('block_list');
-            formData.set('rtype', 1);
+            formData.set('rtype', 3);
         }
         
         const url = new URL(this.params.whost + '/api/rapidupload');
