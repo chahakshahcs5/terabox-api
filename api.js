@@ -105,37 +105,36 @@ class FormUrlEncoded {
  * // Returns something like: "X3p8YFJjUA=="
  */
 function signDownload(s1, s2) {
-    // Initialize permutation array (p) and key array (a)
-    const p = new Uint8Array(256);
     const a = new Uint8Array(256);
+    const p = new Uint8Array(256);
     const result = [];
+    const v = s1.length;
     
     // Key-scheduling algorithm (KSA)
-    // Initialize the permutation array with the secret key
-    Array.from({ length: 256 }, (_, i) => {
-        a[i] = s1.charCodeAt(i % s1.length);
-        p[i] = i;
-    });
+    for (let q = 0; q < 256; q++) {
+        a[q] = s1.charCodeAt(q % v);
+        p[q] = q;
+    }
     
-    // Scramble the permutation array using the key
-    let j = 0;
-    Array.from({ length: 256 }, (_, i) => {
-        j = (j + p[i] + a[i]) % 256;
-        [p[i], p[j]] = [p[j], p[i]]; // swap
-    });
+    // Scramble the permutation array
+    let u = 0;
+    for (let q = 0; q < 256; q++) {
+        u = (u + p[q] + a[q]) % 256;
+        [p[q], p[u]] = [p[u], p[q]]; // Swap
+    }
     
     // Pseudo-random generation algorithm (PRGA)
-    // Generate keystream and XOR with input data
-    let i = 0; j = 0;
-    Array.from({ length: s2.length }, (_, q) => {
+    let i = 0;
+    u = 0;
+    for (let q = 0; q < s2.length; q++) {
         i = (i + 1) % 256;
-        j = (j + p[i]) % 256;
-        [p[i], p[j]] = [p[j], p[i]]; // swap
-        const k = p[(p[i] + p[j]) % 256];
+        u = (u + p[i]) % 256;
+        [p[i], p[u]] = [p[u], p[i]]; // Swap
+        const k = p[(p[i] + p[u]) % 256];
         result.push(s2.charCodeAt(q) ^ k);
-    });
+    }
     
-    // Return the result as Base64
+    // Convert to Base64 (browser and Node.js compatible)
     return Buffer.from(result).toString('base64');
 }
 
@@ -827,7 +826,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            
             if(rdata.code === 0){
                 if(typeof req.headers['set-cookie'] === 'string'){
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
@@ -838,7 +836,6 @@ class TeraBoxApp {
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
                 rdata.data.ndus = ndus;
             }
-            
             return rdata;
         }
         catch (error) {
@@ -889,7 +886,6 @@ class TeraBoxApp {
             // rdata.code: 10 - Email format invalid
             // rdata.code: 11 - Email has been register before
             // rdata.code: 60 - Send code too fast, wait ~60sec
-            
             return rdata;
         }
         catch (error) {
@@ -935,7 +931,6 @@ class TeraBoxApp {
             const rdata = await req.body.json();
             // rdata.code: 0 - OK
             // rdata.code: 59 - Email code is wrong
-            
             return rdata;
         }
         catch (error) {
@@ -989,7 +984,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            
             if(rdata.code === 0 && req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 
@@ -1003,7 +997,6 @@ class TeraBoxApp {
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
                 rdata.data.ndus = ndus;
             }
-            
             return rdata;
         }
         catch (error) {
@@ -1095,6 +1088,7 @@ class TeraBoxApp {
             if(this.params.account_id === 0){
                 await this.checkLogin();
             }
+            
             const curUser = await this.getUserInfo(this.params.account_id);
             if(curUser.records.length > 0){
                 const thisUser = curUser.records[0];
@@ -1102,7 +1096,6 @@ class TeraBoxApp {
                 this.params.is_vip = thisUser.vip_type > 0 ? true : false;
                 this.params.vip_type = thisUser.vip_type;
             }
-            
             return curUser;
         }
         catch (error) {
@@ -1233,15 +1226,6 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/api/list');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
-            url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-            });
-            
             const formData = new this.FormUrlEncoded();
             formData.append('order', 'name');
             formData.append('desc', 0);
@@ -1266,10 +1250,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.getRemoteDir(remoteDir, page);
-            }
             return rdata;
         }
         catch (error) {
@@ -1283,21 +1263,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getRecycleBin(){
+    async getRecycleBin(page = 1){
         const url = new URL(this.params.whost + '/api/recycle/list');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-                order: 'name',
+                // order: 'name',
                 desc: 0,
                 num: 20000,
-                page: 1,
+                page: page,
             });
             
             
@@ -1314,10 +1288,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.getRecycleBin();
-            }
             return rdata;
         }
         catch (error) {
@@ -1335,13 +1305,7 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/api/recycle/clear');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
                 'async': 1,
             });
             
@@ -1358,10 +1322,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.clearRecycleBin();
-            }
             return rdata;
         }
         catch (error) {
@@ -1456,7 +1416,8 @@ class TeraBoxApp {
             
             // uploadid	= 'P1-' + BASE64(ServerLocalIP + ':' + ServerTime + ':' + RequestID)
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
+            // rdata.errno: 4000023 - need verify
+            if(rdata.errno === 4000023){
                 await this.updateAppData();
                 return await this.precreateFile(data);
             }
@@ -1483,18 +1444,19 @@ class TeraBoxApp {
      * @throws {Error} Throws error if file size < 256KB, invalid hashes, HTTP status is not 200, or request fails
      */
     async rapidUpload(data){
-        const formData = new this.FormUrlEncoded();
-        formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
-        // formData.append('target_path', data.remote_dir);
-        formData.append('content-length', data.size);
-        formData.append('content-md5', data.hash.file);
-        formData.append('slice-md5', data.hash.slice);
-        formData.append('content-crc32', data.hash.crc32);
-        // formData.append('local_ctime', '');
-        // formData.append('local_mtime', '');
-        formData.append('block_list', JSON.stringify(data.hash.chunks || []));
-        formData.append('rtype', 2);
-        formData.append('mode', 1);
+        const formData = new this.FormUrlEncoded({
+            path:  makeRemoteFPath(data.remote_dir, data.file),
+            //target_path: data.remote_dir
+            'content-length': data.size,
+            'content-md5': data.hash.file,
+            'slice-md5': data.hash.slice,
+            'content-crc32': data.hash.crc32,
+            //local_ctime: '',
+            //local_mtime: '',
+            block_list: JSON.stringify(data.hash.chunks || []),
+            rtype: 2,
+            mode: 1,
+        });
         
         if(!this.CheckMd5Val(data.hash.slice) || !this.CheckMd5Val(data.hash.file)){
             const badMD5 = new Error('Bad MD5 Slice Hash or MD5 File Hash');
@@ -1505,24 +1467,15 @@ class TeraBoxApp {
             formData.delete('content-crc32');
         }
         
-        if(!Array.isArray(data.hash.chunks)){
+        if(!this.CheckMd5Arr(data.hash.chunks)){
             // use unsafe rapid upload if we don't have chunks hash
             formData.delete('block_list');
-            formData.set('rtype', 3);
+            formData.set('rtype', 1);
         }
         
         const url = new URL(this.params.whost + '/api/rapidupload');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
-            url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-            });
-            
             if(data.size < 256 * 1024){
                 throw new Error(`File size too small!`);
             }
@@ -1543,10 +1496,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.rapidUpload(data);
-            }
+            // rdata.errno: 2 - already exist?
             return rdata;
         }
         catch (error) {
@@ -1563,15 +1513,12 @@ class TeraBoxApp {
      * @throws {Error} Throws error if HTTP status is not 200, or request fails
      */
     async remoteUpload(urls, remote_dir = '/Remote Upload'){
-        const formData = new this.FormUrlEncoded();
-        formData.append('urls', urls);
-        formData.append('upload_to', remote_dir);
+        const formData = new this.FormUrlEncoded({
+            urls: urls,
+            upload_to: remote_dir,
+        });
         
         const url = new URL(this.params.whost + '/webmaster/remoteupload/submit');
-        // url.search = new URLSearchParams({
-        //     ...this.params.app,
-        //     jsToken: this.data.jsToken,
-        // });
         
         try{
             const req = await request(url, {
@@ -1677,13 +1624,11 @@ class TeraBoxApp {
         }
         
         const res = await req.body.json();
-        
         if (res.error_code) {
             const uploadError = new Error(`Upload failed! Error Code #${res.error_code}`);
             uploadError.data = res;
             throw uploadError;
         }
-        
         return res;
     }
     
@@ -1700,19 +1645,9 @@ class TeraBoxApp {
         formData.append('isdir', 1);
         formData.append('block_list', '[]');
         
-        const url = new URL(this.params.whost + '/api/create');
+        const url = new URL(this.params.whost + '/api/create?a=commit');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
-            url.search = new URLSearchParams({
-                a: 'commit',
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-            });
-            
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1729,10 +1664,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.createDir(remoteDir);
-            }
+            // rdata.errno: -7 - param  path file name is invalid
             return rdata;
         }
         catch (error) {
@@ -1789,15 +1721,6 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + `/api/create`);
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
-            url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-            });
-            
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1814,10 +1737,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.createFile(data);
-            }
+            // rdata.errno: 31355 - pcs service failed
             if(rdata.md5){
                 // encrypted etag
                 rdata.emd5 = rdata.md5;
@@ -1829,7 +1749,6 @@ class TeraBoxApp {
                     rdata.etag += '-' + data.hash.chunks.length;
                 }
             }
-            
             return rdata;
         }
         catch (error) {
@@ -1876,7 +1795,7 @@ class TeraBoxApp {
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
-                'async': 1,
+                // 'async': 1,
                 onnest: 'fail',
                 opera: operation, // delete, copy, move, rename
             });
@@ -1897,7 +1816,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
+            if(rdata.errno === 450016){
                 await this.updateAppData();
                 return await this.filemanager(operation, fmparams);
             }
@@ -1914,17 +1833,14 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shareList(){
+    async shareList(page = 1){
         const url = new URL(this.params.whost + '/share/teratransfer/sharelist');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
+                // ...this.params.app,
+                page_size: 100,
+                page: page,
             });
             
             const req = await request(url, {
@@ -1936,10 +1852,6 @@ class TeraBoxApp {
             });
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.shareList();
-            }
             return rdata;
         }
         catch (error) {
@@ -1960,13 +1872,8 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/share/pset');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
+                // ...this.params.app,
             });
             
             filelist = Array.isArray(filelist) ? filelist : [];
@@ -1998,10 +1905,6 @@ class TeraBoxApp {
             });
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.shareSet(filelist, pass, period);
-            }
             return rdata;
         }
         catch (error) {
@@ -2020,13 +1923,8 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/share/cancel');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
+                // ...this.params.app,
             });
             
             shareid_list = Array.isArray(shareid_list) ? shareid_list : [];
@@ -2047,10 +1945,6 @@ class TeraBoxApp {
             });
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.shareCancel(shareid_list);
-            }
             return rdata;
         }
         catch (error) {
@@ -2060,23 +1954,18 @@ class TeraBoxApp {
     
     /**
      * Retrieves information for a shortened URL share
-     * @param {string} shareId - The share url
+     * @param {string} shortUrl - The short url: after "surl="
      * @returns {Promise<Object>} The short URL info JSON (includes file list, permissions)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shortUrlInfo(shareId){
+    async shortUrlInfo(shortUrl){
         const url = new URL(this.params.whost + '/api/shorturlinfo');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-                shorturl: 1 + shareId,
+                //...this.params.app,
+                shorturl: '1' + shortUrl,
                 root: 1,
             });
             
@@ -2097,10 +1986,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.shortUrlInfo(shareId);
-            }
             return rdata;
         }
         catch (error) {
@@ -2110,14 +1995,14 @@ class TeraBoxApp {
     
     /**
      * Lists files under a shortened URL share
-     * @param {string} shareId - The share url
+     * @param {string} shortUrl - The short url: after "surl="
      * @param {string} [remoteDir=''] - Remote directory under share (empty for root)
      * @param {number} [page=1] - Page number for pagination
      * @returns {Promise<Object>} The short URL file list JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shortUrlList(shareId, remoteDir, page = 1){
+    async shortUrlList(shortUrl, remoteDir = '', page = 1){
         const url = new URL(this.params.whost + '/share/list');
         remoteDir = remoteDir || ''
         
@@ -2129,7 +2014,7 @@ class TeraBoxApp {
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
-                shorturl: shareId,
+                shorturl: shortUrl,
                 by: 'name',
                 order: 'asc',
                 num: 20000,
@@ -2158,9 +2043,10 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
+            // rdata.errno: 4000020 - need verify
+            if(rdata.errno === 4000020){
                 await this.updateAppData();
-                return await this.shortUrlList(shareId, remoteDir, page);
+                return await this.shortUrlList(shortUrl, remoteDir, page);
             }
             return rdata;
         }
@@ -2246,10 +2132,6 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/api/pantoken');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
             url.search = new URLSearchParams({
                 ...this.params.app,
                 lang: this.params.lang,
@@ -2286,15 +2168,6 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/api/home/info');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
-            }
-            
-            url.search = new URLSearchParams({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
-            });
-            
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -2308,16 +2181,9 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            
             if(rdata.errno === 0){
-                rdata.data.signb = this.SignDownload(rdata.data.sign1, rdata.data.sign3);
+                rdata.data.signb = this.SignDownload(rdata.data.sign3, rdata.data.sign1);
             }
-            
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.getHomeInfo();
-            }
-            
             return rdata;
         }
         catch (error) {
@@ -2333,24 +2199,22 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async download(fs_ids, signb){
+    async download(fs_ids){
         const url = new URL(this.params.whost + '/api/download');
         
         try{
-            if(this.data.jsToken === ''){
-                await this.updateAppData();
+            const homeInfo = await this.getHomeInfo();
+            if(homeInfo.errno !== 0){
+                throw new Error(`API error! Bad HomeInfo response`);
             }
             
             const formData = new this.FormUrlEncoded({
-                ...this.params.app,
-                jsToken: this.data.jsToken,
                 fidlist: JSON.stringify(fs_ids),
                 type: 'dlink',
                 vip: 2, // this.params.vip_type
-                sign: signb, // base64 sign from getHomeInfo
-                timestamp: Math.round(Date.now()/1000),
+                sign: homeInfo.data.signb,
+                timestamp: homeInfo.data.timestamp,
                 need_speed: 1, // Premium speed?..
-                bdstoken: this.data.bdstoken,
             });
             
             const req = await request(url, {
@@ -2369,10 +2233,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.download(fs_ids, signb);
-            }
             return rdata;
         }
         catch (error) {
@@ -2413,10 +2273,6 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 450016 || rdata.errno === 450016 || rdata.error_code === 450016){
-                await this.updateAppData();
-                return await this.getFileMeta(remote_file_list);
-            }
             return rdata;
         }
         catch (error) {
