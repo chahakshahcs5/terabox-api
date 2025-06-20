@@ -398,6 +398,7 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * @property {function} DecryptAES - AES decryption utility
  * @property {function} EncryptRSA - RSA encryption utility
  * @property {function} PRandGen - Pseudo-random hash generator
+ * @property {string} TERABOX_DOMAIN - Default Terabox domain
  * @property {number} TERABOX_TIMEOUT - Default API timeout (10 seconds)
  */
 class TeraBoxApp {
@@ -413,6 +414,12 @@ class TeraBoxApp {
     DecryptAES = decryptAES;
     EncryptRSA = encryptRSA;
     PRandGen = prandGen;
+    
+    /**
+     * Default Terabox Domain
+     * @type {string}
+     */
+    TERABOX_DOMAIN = 'terabox.com';
     
     /**
      * Default API timeout in milliseconds (10 seconds)
@@ -442,6 +449,7 @@ class TeraBoxApp {
     /**
      * Application parameters and configuration
      * @type {Object}
+     * @property {string} bhost - base host name
      * @property {string} whost - Web host URL
      * @property {string} uhost - Upload host URL
      * @property {string} lang - Language setting
@@ -464,8 +472,8 @@ class TeraBoxApp {
      * @property {string} cursor - Cursor for pagination
      */
     params = {
-        whost: 'https://www.terabox.com',
-        uhost: 'https://c-jp.terabox.com',
+        whost: 'https://www.' + this.TERABOX_DOMAIN,
+        uhost: 'https://c-www.' + this.TERABOX_DOMAIN,
         lang: 'en',
         app: {
             app_id: 250528,
@@ -522,6 +530,17 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT + 10000),
             });
+            
+            if(req.statusCode === 302){
+                const newUrl = new URL(req.headers.location);
+                if(this.params.whost !== newUrl.origin){
+                    this.params.whost = newUrl.origin;
+                    console.warn(`[WARN] Default hostname changed to ${newUrl.origin}`);
+                }
+                const toPathname = newUrl.pathname.replace(/^\//, '');
+                const finalUrl = toPathname + newUrl.search;
+                return await this.updateAppData(finalUrl, retries);
+            }
             
             if(req.headers['set-cookie']){
                 const cJar = new CookieJar();
@@ -716,6 +735,14 @@ class TeraBoxApp {
             
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const regionPrefix = req.headers['region-domain-prefix'];
+            if(regionPrefix){
+                const newHostname = `https://${regionPrefix}.${this.TERABOX_DOMAIN}`;
+                console.warn(`[WARN] Default hostname changed to ${newHostname}`);
+                this.params.whost = new URL(newHostname).origin;
+                return await this.checkLogin();
             }
             
             const rdata = await req.body.json();
