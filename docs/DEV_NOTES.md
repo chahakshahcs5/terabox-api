@@ -151,17 +151,6 @@ curl -H "Cookie: ndus=..."
   -X POST "https://terabox.com/passport/account/modify"
   -d "client=android&pass_version=2.0&devuid=?&psign=?&uname=TeraBox"
 
-https://www.terabox.com/passport/prelogin?
-    ...TERABOX_APP_PARAMS
-    jsToken=
-    client=web
-    pass_version=2.8
-    lang=en
-    clientfrom=h5
-    pcftoken=
-    email=encoded
-CODED--
-
 https://www.terabox.com/share/aset?
   ...TERABOX_APP_PARAMS
   jsToken=
@@ -174,4 +163,8 @@ https://www.terabox.com/share/aset?
   pwd=
 
 https://www.terabox.com/share/taskquery?taskid=123
+
+https://www.terabox.com/group/resource/search?key_word=magia
+
+https://www.terabox.app/share/streaming
 ```
