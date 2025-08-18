@@ -780,11 +780,12 @@ class TeraBoxApp {
             formData.append('email', email);
             
             const req = await request(url, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
-                    Referer: this.params.whost,
+                    'Referer': this.params.whost,
                 },
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
@@ -839,11 +840,12 @@ class TeraBoxApp {
             formData.append('timestamp', preLoginData.timestamp);
             
             const req = await request(url, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
-                    Referer: this.params.whost,
+                    'Referer': this.params.whost,
                 },
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
