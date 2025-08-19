@@ -780,6 +780,7 @@ class TeraBoxApp {
             formData.append('email', email);
             
             const req = await request(url, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
@@ -839,6 +840,7 @@ class TeraBoxApp {
             formData.append('timestamp', preLoginData.timestamp);
             
             const req = await request(url, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'User-Agent': this.params.ua,
