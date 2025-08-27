@@ -1288,6 +1288,57 @@ class TeraBoxApp {
     }
     
     /**
+     * Retrieves the contents of a remote directory with specific file category
+     * @param {number} [categoryId=1] - selected category:
+     *     1 - video
+     *     2 - audio
+     *     3 - pictures
+     *     4 - documents
+     *     5 - apps
+     *     6 - other
+     *     7 - torrent
+     * @param {string} remoteDir - Remote directory path to list
+     * @param {number} [page=1] - Page number for pagination
+     * @returns {Promise<Object>} The directory listing JSON (includes entries array)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async getCategoryList(categoryId = 1, remoteDir = '/', page = 1, order = 'name', desc = 0, num = 20000){
+        const url = new URL(this.params.whost + '/api/categorylist');
+        
+        try{
+            const formData = new this.FormUrlEncoded();
+            formData.append('order', order);
+            formData.append('desc', desc);
+            formData.append('dir', remoteDir);
+            formData.append('num', num);
+            formData.append('page', page);
+            formData.append('category', categoryId);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getCategoryList', { cause: error });
+        }
+    }
+    
+    /**
      * Retrieves the contents of the recycle bin
      * @returns {Promise<Object>} The recycle bin listing JSON (includes entries array)
      * @async
