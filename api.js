@@ -2322,6 +2322,53 @@ class TeraBoxApp {
     }
     
     /**
+     * Retrieves the streaming contents of a remote file
+     * @param {string} remotePath - Remote video file
+     * @param {string} type - Streaming type:
+     *     M3U8_FLV_264_480
+     *     M3U8_AUTO_240
+     *     M3U8_AUTO_360
+     *     M3U8_AUTO_480
+     *     M3U8_AUTO_720
+     *     M3U8_AUTO_1080
+     *     M3U8_SUBTITLE_SRT
+     * @returns {Promise<Object>} m3u8 playlist, or JSON with error
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async getStream(remotePath = '/video.mp4', type = 'M3U8_AUTO_480'){
+        const url = new URL(this.params.whost + '/api/streaming');
+        
+        try{
+            const formData = new this.FormUrlEncoded();
+            formData.append('path', remotePath);
+            formData.append('type', type);
+            formData.append('vip', 2);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('getStream', { cause: error });
+        }
+    }
+    
+    /**
      * Retrieves metadata for specified remote files
      * @param {Array<Object>} remote_file_list - Array of file descriptor objects { fs_id, path, etc. }
      * @returns {Promise<Object>} The file metadata JSON (includes size, md5, etc.)

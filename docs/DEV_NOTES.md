@@ -163,8 +163,7 @@ https://www.terabox.com/share/aset?
   pwd=
 
 https://www.terabox.com/share/taskquery?taskid=123
-
 https://www.terabox.com/group/resource/search?key_word=magia
-
 https://www.terabox.app/share/streaming
+https://www.terabox.com/api/sharedownload
 ```
