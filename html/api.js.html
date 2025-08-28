@@ -853,7 +853,10 @@ class TeraBoxApp {
     
     /**
      * Completes the passport login process using preLoginData and password
-     * @param {Object} preLoginData - Data returned from passportPreLogin (seval, random, timestamp)
+     * @param {Object} preLoginData - Data returned from passportPreLogin
+     * @param {string} preLoginData.seval - The seval value from pre-login.
+     * @param {string} preLoginData.random - The random value from pre-login.
+     * @param {number} preLoginData.timestamp - The timestamp from pre-login.
      * @param {string} email - The user's email address
      * @param {string} pass - The user's plaintext password
      * @returns {Promise&lt;Object>} The login response JSON (includes ndus token on success)
