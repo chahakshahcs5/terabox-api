@@ -1,4 +1,45 @@
-import { FormData, Client, buildConnector, request } from 'undici';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>api.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="FormUrlEncoded.html">FormUrlEncoded</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="FormUrlEncoded.html#append">append</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="FormUrlEncoded.html#delete">delete</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="FormUrlEncoded.html#set">set</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="FormUrlEncoded.html#str">str</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="FormUrlEncoded.html#url">url</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="TeraBoxApp.html">TeraBoxApp</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#checkLogin">checkLogin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#clearRecycleBin">clearRecycleBin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#createDir">createDir</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#createFile">createFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#doReq">doReq</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#download">download</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#fileDiff">fileDiff</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#filemanager">filemanager</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#genPanToken">genPanToken</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getCategoryList">getCategoryList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getCoinsCount">getCoinsCount</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getCurrentUserInfo">getCurrentUserInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getFileMeta">getFileMeta</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getHomeInfo">getHomeInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getPublicKey">getPublicKey</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getQuota">getQuota</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getRecentUploads">getRecentUploads</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getRecycleBin">getRecycleBin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getRemoteDir">getRemoteDir</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getStream">getStream</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getSysCfg">getSysCfg</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getUploadHost">getUploadHost</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#getUserInfo">getUserInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#passportGetInfo">passportGetInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#passportLogin">passportLogin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#passportPreLogin">passportPreLogin</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#precreateFile">precreateFile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#rapidUpload">rapidUpload</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#regFinish">regFinish</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#regSendCode">regSendCode</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#regVerify">regVerify</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#remoteUpload">remoteUpload</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#setVipDefaults">setVipDefaults</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#shareCancel">shareCancel</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#shareList">shareList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#shareSet">shareSet</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#shortUrlInfo">shortUrlInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#shortUrlList">shortUrlList</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#updateAppData">updateAppData</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#uploadChunk">uploadChunk</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TeraBoxApp.html#userMembership">userMembership</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#changeBase64Type">changeBase64Type</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#checkMd5arr">checkMd5arr</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#checkMd5val">checkMd5val</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#decodeMd5">decodeMd5</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#decryptAES">decryptAES</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#encryptRSA">encryptRSA</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#makeRemoteFPath">makeRemoteFPath</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#prandGen">prandGen</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#signDownload">signDownload</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">api.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { FormData, Client, buildConnector, request } from 'undici';
 import { Cookie, CookieJar } from 'tough-cookie';
 import { filesize } from 'filesize';
 
@@ -27,7 +68,7 @@ function makeRemoteFPath(sdir, sfile){
 class FormUrlEncoded {
     /**
      * Creates a new FormUrlEncoded instance
-     * @param {Object.<string, string>} [params] - Optional initial parameters as key-value pairs
+     * @param {Object.&lt;string, string>} [params] - Optional initial parameters as key-value pairs
      * @example
      * const form = new FormUrlEncoded({ foo: 'bar', baz: 'qux' });
      */
@@ -37,7 +78,7 @@ class FormUrlEncoded {
          * @type {URLSearchParams}
          */
         this.data = new URLSearchParams();
-        if(typeof params === 'object' && params !== null){
+        if(typeof params === 'object' &amp;&amp; params !== null){
             for (const [key, value] of Object.entries(params)) {
                 this.data.append(key, value);
             }
@@ -74,7 +115,7 @@ class FormUrlEncoded {
      * Suitable for application/x-www-form-urlencoded content
      * @returns {string} The encoded form data
      * @example
-     * form.str(); // returns "foo=bar&baz=qux"
+     * form.str(); // returns "foo=bar&amp;baz=qux"
      */
     str(){
         return this.data.toString().replace(/\+/g, '%20');
@@ -216,8 +257,8 @@ function decodeMd5(md5) {
     
     // Apply XOR transformation to each character
     let n = '';
-    for (let i = 0; i < o.length; i++) {
-        const orig = parseInt(o[i], 16) ^ (i & 15);
+    for (let i = 0; i &lt; o.length; i++) {
+        const orig = parseInt(o[i], 16) ^ (i &amp; 15);
         n += orig.toString(16);
     }
     
@@ -333,7 +374,7 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     // Mode 2: Apply MD5 hash and length padding
     if (mode === 2) {
         const md5 = crypto.createHash('md5').update(message).digest('hex');
-        message = md5 + (md5.length<10?'0':'') + md5.length;
+        message = md5 + (md5.length&lt;10?'0':'') + md5.length;
     }
     
     // Convert message to Buffer
@@ -515,7 +556,7 @@ class TeraBoxApp {
      * Updates application data including tokens and user information
      * @param {string} [customPath] - Custom path to use for the update request
      * @param {number} [retries=4] - Number of retry attempts
-     * @returns {Promise<Object>} The updated template data
+     * @returns {Promise&lt;Object>} The updated template data
      * @async
      * @throws {Error} Throws error if request fails or parsing fails
      */
@@ -555,9 +596,9 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.text();
-            const tdataRegex = /<script>var templateData = (.*);<\/script>/;
+            const tdataRegex = /&lt;script>var templateData = (.*);&lt;\/script>/;
             const jsTokenRegex = /window.jsToken%20%3D%20a%7D%3Bfn%28%22(.*)%22%29/;
-            const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1].split(';</script>')[0]) : {};
+            const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1].split(';&lt;/script>')[0]) : {};
             const isLoginReq = req.headers.location === '/login' ? true : false;
             
             if(tdata.jsToken){
@@ -580,7 +621,7 @@ class TeraBoxApp {
             this.data.jsToken = tdata.jsToken || '';
             
             this.params.account_id = parseInt(tdata.uk) || 0;
-            if(typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0){
+            if(typeof tdata.userVipIdentity === 'number' &amp;&amp; tdata.userVipIdentity > 0){
                 this.params.is_vip = true;
                 //this.params.vip_type = 2;
             }
@@ -588,7 +629,7 @@ class TeraBoxApp {
             return tdata;
         }
         catch(error){
-            if(error.name === 'TimeoutError' && retries > 0){
+            if(error.name === 'TimeoutError' &amp;&amp; retries > 0){
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return await this.updateAppData(customPath, retries - 1);
             }
@@ -618,7 +659,7 @@ class TeraBoxApp {
      * @param {string} req_url - The request URL (relative to whost)
      * @param {Object} [req_options={}] - Request options (headers, body, etc.)
      * @param {number} [retries=4] - Number of retry attempts
-     * @returns {Promise<Object>} The JSON-parsed response data
+     * @returns {Promise&lt;Object>} The JSON-parsed response data
      * @async
      * @throws {Error} Throws error if all retries fail
      */
@@ -652,7 +693,7 @@ class TeraBoxApp {
             
             const req = await request(url, options);
             
-            if(save_cookies && req.headers['set-cookie']){
+            if(save_cookies &amp;&amp; req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
                 if(typeof req.headers['set-cookie'] === 'string'){
@@ -681,7 +722,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves system configuration from the TeraBox API
-     * @returns {Promise<Object>} The system configuration JSON data
+     * @returns {Promise&lt;Object>} The system configuration JSON data
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -717,7 +758,7 @@ class TeraBoxApp {
     
     /**
      * Checks login status of the current session
-     * @returns {Promise<Object>} The login status JSON data
+     * @returns {Promise&lt;Object>} The login status JSON data
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -759,7 +800,7 @@ class TeraBoxApp {
     /**
      * Initiates the pre-login step for passport authentication
      * @param {string} email - The user's email address
-     * @returns {Promise<Object>} The pre-login data JSON (includes seval, random, timestamp)
+     * @returns {Promise&lt;Object>} The pre-login data JSON (includes seval, random, timestamp)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -808,7 +849,7 @@ class TeraBoxApp {
      * @param {Object} preLoginData - Data returned from passportPreLogin (seval, random, timestamp)
      * @param {string} email - The user's email address
      * @param {string} pass - The user's plaintext password
-     * @returns {Promise<Object>} The login response JSON (includes ndus token on success)
+     * @returns {Promise&lt;Object>} The login response JSON (includes ndus token on success)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -876,7 +917,7 @@ class TeraBoxApp {
     /**
      * Sends a registration code to the specified email
      * @param {string} email - The email address to send the code to
-     * @returns {Promise<Object>} The send code response JSON (includes code and message)
+     * @returns {Promise&lt;Object>} The send code response JSON (includes code and message)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -927,7 +968,7 @@ class TeraBoxApp {
      * Verifies the registration code received via email
      * @param {string} regToken - Registration token from send code response
      * @param {string|number} code - The verification code sent to email
-     * @returns {Promise<Object>} The verification response JSON
+     * @returns {Promise&lt;Object>} The verification response JSON
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -972,7 +1013,7 @@ class TeraBoxApp {
      * Completes the registration process by setting a password
      * @param {string} regToken - Registration token from verification step
      * @param {string} pass - The new password to set, length is 6-15 and contains at least 1 Latin letter
-     * @returns {Promise<Object>} The finish registration response JSON (includes ndus token on success)
+     * @returns {Promise&lt;Object>} The finish registration response JSON (includes ndus token on success)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -984,7 +1025,7 @@ class TeraBoxApp {
                 await this.getPublicKey();
             }
             
-            if(typeof pass !== 'string' || pass.length < 6 || pass.length > 15 || !pass.match(/[a-z]/i)){
+            if(typeof pass !== 'string' || pass.length &lt; 6 || pass.length > 15 || !pass.match(/[a-z]/i)){
                 return { code: -2, logid: 0, msg: 'invalid password', };
             }
             
@@ -1014,7 +1055,7 @@ class TeraBoxApp {
             }
             
             const rdata = await req.body.json();
-            if(rdata.code === 0 && req.headers['set-cookie']){
+            if(rdata.code === 0 &amp;&amp; req.headers['set-cookie']){
                 const cJar = new CookieJar();
                 
                 if(typeof req.headers['set-cookie'] === 'string'){
@@ -1036,7 +1077,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves passport user information for the current session
-     * @returns {Promise<Object>} The passport user info JSON (includes display_name)
+     * @returns {Promise&lt;Object>} The passport user info JSON (includes display_name)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1069,7 +1110,7 @@ class TeraBoxApp {
     
     /**
      * Fetches membership information for the current user
-     * @returns {Promise<Object>} The membership JSON (includes VIP status)
+     * @returns {Promise&lt;Object>} The membership JSON (includes VIP status)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1109,7 +1150,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves current user information (username, VIP status)
-     * @returns {Promise<Object>} The user info JSON (includes records array)
+     * @returns {Promise&lt;Object>} The user info JSON (includes records array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1136,7 +1177,7 @@ class TeraBoxApp {
     /**
      * Retrieves information for a specific user ID
      * @param {number|string} user_id - The user ID to look up
-     * @returns {Promise<Object>} The user info JSON (includes data)
+     * @returns {Promise&lt;Object>} The user info JSON (includes data)
      * @async
      * @throws {Error} Throws error if user_id is invalid, HTTP status is not 200, or request fails
      */
@@ -1176,7 +1217,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves storage quota information for the current account
-     * @returns {Promise<Object>} The quota JSON (includes total, used, available)
+     * @returns {Promise&lt;Object>} The quota JSON (includes total, used, available)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1216,7 +1257,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves the user's coins count (points)
-     * @returns {Promise<Object>} The coins count JSON (includes records of coin usage)
+     * @returns {Promise&lt;Object>} The coins count JSON (includes records of coin usage)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1248,7 +1289,7 @@ class TeraBoxApp {
      * Retrieves the contents of a remote directory
      * @param {string} remoteDir - Remote directory path to list
      * @param {number} [page=1] - Page number for pagination
-     * @returns {Promise<Object>} The directory listing JSON (includes entries array)
+     * @returns {Promise&lt;Object>} The directory listing JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1299,7 +1340,7 @@ class TeraBoxApp {
      *     7 - torrent
      * @param {string} remoteDir - Remote directory path to list
      * @param {number} [page=1] - Page number for pagination
-     * @returns {Promise<Object>} The directory listing JSON (includes entries array)
+     * @returns {Promise&lt;Object>} The directory listing JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1340,7 +1381,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves the contents of the recycle bin
-     * @returns {Promise<Object>} The recycle bin listing JSON (includes entries array)
+     * @returns {Promise&lt;Object>} The recycle bin listing JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1378,7 +1419,7 @@ class TeraBoxApp {
     
     /**
      * Clears all items in the recycle bin
-     * @returns {Promise<Object>} The clear recycle bin response JSON
+     * @returns {Promise&lt;Object>} The clear recycle bin response JSON
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1421,8 +1462,8 @@ class TeraBoxApp {
      * @param {string} data.hash.file - MD5 hash of full file
      * @param {string} data.hash.slice - MD5 hash of first slice
      * @param {number} data.hash.crc32 - CRC32 value
-     * @param {Array<string>} data.hash.chunks - Array of MD5 chunk hashes
-     * @returns {Promise<Object>} The precreate response JSON (includes upload_id, etc.)
+     * @param {Array&lt;string>} data.hash.chunks - Array of MD5 chunk hashes
+     * @returns {Promise&lt;Object>} The precreate response JSON (includes upload_id, etc.)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1436,18 +1477,18 @@ class TeraBoxApp {
         formData.append('block_list', '[]');
         formData.append('rtype', 2);
         
-        if(data.upload_id && typeof data.upload_id === 'string' && data.upload_id !== ''){
+        if(data.upload_id &amp;&amp; typeof data.upload_id === 'string' &amp;&amp; data.upload_id !== ''){
             formData.append('uploadid', data.upload_id);
         }
         
         // check if has correct md5 values
-        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
+        if(this.CheckMd5Val(data.hash.slice) &amp;&amp; this.CheckMd5Val(data.hash.file)){
             formData.append('content-md5', data.hash.file);
             formData.append('slice-md5', data.hash.slice);
         }
         
         // check crc32int and ignore field for crc32 out of range
-        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
+        if(Number.isSafeInteger(data.hash.crc32) &amp;&amp; data.hash.crc32 >= 0 &amp;&amp; data.hash.crc32 &lt;= 0xFFFFFFFF){
             formData.append('content-crc32', data.hash.crc32);
         }
         
@@ -1519,10 +1560,10 @@ class TeraBoxApp {
      * @param {string} data.hash.file - MD5 hash of full file
      * @param {string} data.hash.slice - MD5 hash of first slice
      * @param {number} data.hash.crc32 - CRC32 value
-     * @param {Array<string>} [data.hash.chunks] - Array of MD5 chunk hashes
-     * @returns {Promise<Object>} The rapid upload response JSON (indicates success or fallback)
+     * @param {Array&lt;string>} [data.hash.chunks] - Array of MD5 chunk hashes
+     * @returns {Promise&lt;Object>} The rapid upload response JSON (indicates success or fallback)
      * @async
-     * @throws {Error} Throws error if file size < 256KB, invalid hashes, HTTP status is not 200, or request fails
+     * @throws {Error} Throws error if file size &lt; 256KB, invalid hashes, HTTP status is not 200, or request fails
      */
     async rapidUpload(data){
         const formData = new this.FormUrlEncoded({
@@ -1544,7 +1585,7 @@ class TeraBoxApp {
             throw new Error('rapidUpload', { cause: badMD5 });
         }
         
-        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || data.hash.crc32 > 0xFFFFFFFF){
+        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 &lt; 0 || data.hash.crc32 > 0xFFFFFFFF){
             formData.delete('content-crc32');
         }
         
@@ -1557,7 +1598,7 @@ class TeraBoxApp {
         const url = new URL(this.params.whost + '/api/rapidupload');
         
         try{
-            if(data.size < 256 * 1024){
+            if(data.size &lt; 256 * 1024){
                 throw new Error(`File size too small!`);
             }
             
@@ -1589,7 +1630,7 @@ class TeraBoxApp {
      * Attempts a upload file from remote server
      * @param {string} urls - Source urls (coma-separated)
      * @param {string} remote_dir - Remote directory path
-     * @returns {Promise<Object>} The remote upload response JSON (indicates success or fallback)
+     * @returns {Promise&lt;Object>} The remote upload response JSON (indicates success or fallback)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200, or request fails
      */
@@ -1627,7 +1668,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves an upload host endpoint to use for file uploads
-     * @returns {Promise<Object>} The upload host response JSON (includes host field)
+     * @returns {Promise&lt;Object>} The upload host response JSON (includes host field)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1662,7 +1703,7 @@ class TeraBoxApp {
      * @param {Blob|Buffer} blob - The binary data of the chunk
      * @param {function} [reqHandler] - Optional request progress handler
      * @param {AbortSignal} [externalAbort] - Optional external abort signal
-     * @returns {Promise<Object>} The upload chunk response JSON (includes MD5 for chunk)
+     * @returns {Promise&lt;Object>} The upload chunk response JSON (includes MD5 for chunk)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200, chunk upload fails, or request times out
      */
@@ -1716,7 +1757,7 @@ class TeraBoxApp {
     /**
      * Creates a new directory in the remote file system
      * @param {string} remoteDir - The path of the directory to create
-     * @returns {Promise<Object>} The create directory response JSON
+     * @returns {Promise&lt;Object>} The create directory response JSON
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1763,9 +1804,9 @@ class TeraBoxApp {
      * @param {string} data.hash.file - MD5 hash of full file
      * @param {string} data.hash.slice - MD5 hash of first slice
      * @param {number} data.hash.crc32 - CRC32 value
-     * @param {Array<string>} data.hash.chunks - Array of MD5 chunk hashes
+     * @param {Array&lt;string>} data.hash.chunks - Array of MD5 chunk hashes
      * @param {string} data.upload_id - Upload ID obtained from precreate
-     * @returns {Promise<Object>} The create file response JSON (includes MD5 and ETag)
+     * @returns {Promise&lt;Object>} The create file response JSON (includes MD5 and ETag)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1777,13 +1818,13 @@ class TeraBoxApp {
         formData.append('isdir', 0);
         
         // check if has correct md5 values
-        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
+        if(this.CheckMd5Val(data.hash.slice) &amp;&amp; this.CheckMd5Val(data.hash.file)){
             formData.append('content-md5', data.hash.file);
             formData.append('slice-md5', data.hash.slice);
         }
         
         // check crc32int and ignore field for crc32 out of range
-        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
+        if(Number.isSafeInteger(data.hash.crc32) &amp;&amp; data.hash.crc32 >= 0 &amp;&amp; data.hash.crc32 &lt;= 0xFFFFFFFF){
             formData.append('content-crc32', data.hash.crc32);
         }
         
@@ -1842,7 +1883,7 @@ class TeraBoxApp {
      * Performs file management operations (delete, copy, move, rename)
      * @param {string} operation - Operation type: 'delete', 'copy', 'move', 'rename'
      * @param {Array} fmparams - Parameters for the operation (array of paths or objects)
-     * @returns {Promise<Object>} The file manager response JSON
+     * @returns {Promise&lt;Object>} The file manager response JSON
      * @async
      * @throws {Error} Throws error if fmparams is not an array, HTTP status is not 200, or request fails
      */
@@ -1910,7 +1951,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves a list of shares created by the user
-     * @returns {Promise<Object>} The share list JSON (includes share entries)
+     * @returns {Promise&lt;Object>} The share list JSON (includes share entries)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1942,10 +1983,10 @@ class TeraBoxApp {
     
     /**
      * Sets sharing parameters (e.g., password, expiration) for specified files
-     * @param {Array<string>} filelist - Array of file paths to share
+     * @param {Array&lt;string>} filelist - Array of file paths to share
      * @param {string} [pass=''] - Optional 4-character alphanumeric password
      * @param {number} [period=0] - Sharing period in days (0 for no expiration)
-     * @returns {Promise<Object>} The share set response JSON (includes share IDs)
+     * @returns {Promise&lt;Object>} The share set response JSON (includes share IDs)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -1960,12 +2001,12 @@ class TeraBoxApp {
             filelist = Array.isArray(filelist) ? filelist : [];
             filelist = JSON.stringify(filelist);
             
-            pass = typeof pass === 'string' && pass.match(/^[0-9a-z]{4}$/i) ? pass : '';
+            pass = typeof pass === 'string' &amp;&amp; pass.match(/^[0-9a-z]{4}$/i) ? pass : '';
             const schannel = pass !== '' ? 4 : 0;
             
             // 0 - infinity, otherwise valid X days
             period = parseInt(period);
-            period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
+            period = !isNaN(period) &amp;&amp; Number.isSafeInteger(period) ? period : 0;
             
             const formData = new this.FormUrlEncoded();
             formData.append('schannel', schannel);
@@ -1995,8 +2036,8 @@ class TeraBoxApp {
     
     /**
      * Cancels existing shares by share ID
-     * @param {Array<number>} [shareid_list=[]] - Array of share IDs to cancel
-     * @returns {Promise<Object>} The share cancel response JSON
+     * @param {Array&lt;number>} [shareid_list=[]] - Array of share IDs to cancel
+     * @returns {Promise&lt;Object>} The share cancel response JSON
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2036,7 +2077,7 @@ class TeraBoxApp {
     /**
      * Retrieves information for a shortened URL share
      * @param {string} shortUrl - The short url: after "surl="
-     * @returns {Promise<Object>} The short URL info JSON (includes file list, permissions)
+     * @returns {Promise&lt;Object>} The short URL info JSON (includes file list, permissions)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2079,7 +2120,7 @@ class TeraBoxApp {
      * @param {string} shortUrl - The short url: after "surl="
      * @param {string} [remoteDir=''] - Remote directory under share (empty for root)
      * @param {number} [page=1] - Page number for pagination
-     * @returns {Promise<Object>} The short URL file list JSON (includes entries array)
+     * @returns {Promise&lt;Object>} The short URL file list JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2138,7 +2179,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves file difference (delta) information for synchronization
-     * @returns {Promise<Object>} The file diff JSON (includes entries, request_id, has_more flag)
+     * @returns {Promise&lt;Object>} The file diff JSON (includes entries, request_id, has_more flag)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200, request fails, or on recursive errors
      */
@@ -2205,7 +2246,7 @@ class TeraBoxApp {
     
     /**
      * Generates a PAN token for subsequent API requests
-     * @returns {Promise<Object>} The PAN token response JSON (includes pan token and expire)
+     * @returns {Promise&lt;Object>} The PAN token response JSON (includes pan token and expire)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2241,7 +2282,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves home page information (user info, sign data)
-     * @returns {Promise<Object>} The home info JSON (includes sign1, sign3, data.signb)
+     * @returns {Promise&lt;Object>} The home info JSON (includes sign1, sign3, data.signb)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2274,9 +2315,9 @@ class TeraBoxApp {
     
     /**
      * Initiates a download request for specified file IDs
-     * @param {Array<number>} fs_ids - Array of file system IDs to download
+     * @param {Array&lt;number>} fs_ids - Array of file system IDs to download
      * @param {string} signb - Base64-encoded signature from getHomeInfo
-     * @returns {Promise<Object>} The download response JSON (includes dlink URLs)
+     * @returns {Promise&lt;Object>} The download response JSON (includes dlink URLs)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2332,7 +2373,7 @@ class TeraBoxApp {
      *     M3U8_AUTO_720,
      *     M3U8_AUTO_1080,
      *     M3U8_SUBTITLE_SRT
-     * @returns {Promise<Object>} m3u8 playlist, or JSON with error
+     * @returns {Promise&lt;Object>} m3u8 playlist, or JSON with error
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2370,8 +2411,8 @@ class TeraBoxApp {
     
     /**
      * Retrieves metadata for specified remote files
-     * @param {Array<Object>} remote_file_list - Array of file descriptor objects { fs_id, path, etc. }
-     * @returns {Promise<Object>} The file metadata JSON (includes size, md5, etc.)
+     * @param {Array&lt;Object>} remote_file_list - Array of file descriptor objects { fs_id, path, etc. }
+     * @returns {Promise&lt;Object>} The file metadata JSON (includes size, md5, etc.)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2411,7 +2452,7 @@ class TeraBoxApp {
     /**
      * Retrieves a list of recent uploads for the account
      * @param {number} [page=1] - Page number for pagination
-     * @returns {Promise<Object>} The recent uploads JSON (includes records array)
+     * @returns {Promise&lt;Object>} The recent uploads JSON (includes records array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2450,7 +2491,7 @@ class TeraBoxApp {
     
     /**
      * Retrieves the RSA public key from the server for encryption
-     * @returns {Promise<Object>} The public key response JSON (includes pp1 and pp2)
+     * @returns {Promise&lt;Object>} The public key response JSON (includes pp1 and pp2)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
@@ -2485,3 +2526,22 @@ class TeraBoxApp {
 }
 
 export default TeraBoxApp;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.4</a> on Thu Aug 28 2025 09:29:34 (UTC) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

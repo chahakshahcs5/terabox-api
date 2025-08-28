@@ -5,6 +5,7 @@
     "main": "api.js",
     "type": "module",
     "scripts": {
+        "html": "python .github/jsdoc_utc.py",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
@@ -26,5 +27,10 @@
         "filesize": "^11.0.2",
         "tough-cookie": "^6.0.0",
         "undici": "^7.12.0"
+    },
+    "devDependencies": {
+        "jsdoc": "^4.0.4",
+        "minami": "^1.2.3",
+        "taffydb": "^2.7.3"
     }
 }
