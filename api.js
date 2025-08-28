@@ -390,7 +390,7 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  *
  * @class
  * @exports TeraBoxApp
- * @property {object} FormUrlEncoded - Form URL encoding utility
+ * @property {class} FormUrlEncoded - Form URL encoding utility
  * @property {function} SignDownload - Download signature generator
  * @property {function} CheckMd5Val - MD5 hash validator (single)
  * @property {function} CheckMd5Arr - MD5 hash validator (array)
@@ -1291,12 +1291,12 @@ class TeraBoxApp {
     /**
      * Retrieves the contents of a remote directory with specific file category
      * @param {number} [categoryId=1] - selected category:
-     *     1 - video
-     *     2 - audio
-     *     3 - pictures
-     *     4 - documents
-     *     5 - apps
-     *     6 - other
+     *     1 - video,
+     *     2 - audio,
+     *     3 - pictures,
+     *     4 - documents,
+     *     5 - apps,
+     *     6 - other,
      *     7 - torrent
      * @param {string} remoteDir - Remote directory path to list
      * @param {number} [page=1] - Page number for pagination
