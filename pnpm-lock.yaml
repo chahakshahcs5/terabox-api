@@ -21,15 +21,12 @@ importers:
         specifier: ^7.12.0
         version: 7.15.0
     devDependencies:
+      docdash:
+        specifier: ^2.0.2
+        version: 2.0.2
       jsdoc:
         specifier: ^4.0.4
         version: 4.0.4
-      minami:
-        specifier: ^1.2.3
-        version: 1.2.3
-      taffydb:
-        specifier: ^2.7.3
-        version: 2.7.3
 
 packages:
 
@@ -77,6 +74,9 @@ packages:
     resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
     engines: {node: '>=0.8'}
     hasBin: true
+
+  docdash@2.0.2:
+    resolution: {integrity: sha512-3SDDheh9ddrwjzf6dPFe1a16M6ftstqTNjik2+1fx46l24H9dD2osT2q9y+nBEC1wWz4GIqA48JmicOLQ0R8xA==}
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
@@ -128,9 +128,6 @@ packages:
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
-  minami@1.2.3:
-    resolution: {integrity: sha512-3f2QqqbUC1usVux0FkQMFYB73yd9JIxmHSn1dWQacizL6hOUaNu6mA3KxZ9SfiCc4qgcgq+5XP59+hP7URa1Dw==}
-
   mkdirp@1.0.4:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
@@ -146,9 +143,6 @@ packages:
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
-
-  taffydb@2.7.3:
-    resolution: {integrity: sha512-GQ3gtYFSOAxSMN/apGtDKKkbJf+8izz5YfbGqIsUc7AMiQOapARZ76dhilRY2h39cynYxBFdafQo5HUL5vgkrg==}
 
   tldts-core@7.0.12:
     resolution: {integrity: sha512-3K76aXywJFduGRsOYoY5JzINLs/WMlOkeDwPL+8OCPq2Rh39gkSDtWAxdJQlWjpun/xF/LHf29yqCi6VC/rHDA==}
@@ -212,6 +206,10 @@ snapshots:
 
   crc-32@1.2.2: {}
 
+  docdash@2.0.2:
+    dependencies:
+      '@jsdoc/salty': 0.2.9
+
   entities@4.5.0: {}
 
   escape-string-regexp@2.0.0: {}
@@ -270,8 +268,6 @@ snapshots:
 
   mdurl@2.0.0: {}
 
-  minami@1.2.3: {}
-
   mkdirp@1.0.4: {}
 
   punycode.js@2.3.1: {}
@@ -281,8 +277,6 @@ snapshots:
       lodash: 4.17.21
 
   strip-json-comments@3.1.1: {}
-
-  taffydb@2.7.3: {}
 
   tldts-core@7.0.12: {}
 

@@ -389,6 +389,7 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * including encryption utilities, API request handling, and session management.
  *
  * @class
+ * @exports TeraBoxApp
  * @property {object} FormUrlEncoded - Form URL encoding utility
  * @property {function} SignDownload - Download signature generator
  * @property {function} CheckMd5Val - MD5 hash validator (single)

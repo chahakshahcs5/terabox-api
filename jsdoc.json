@@ -1,12 +1,22 @@
 {
     "source": {
-        "include": ["api.js"],
+        "include": ["api.js", "helper.js"],
         "includePattern": ".js$",
         "excludePattern": "(node_modules|docs|html)"
     },
     "opts": {
         "destination": "./html",
-        "recurse": true,
-        "template": "node_modules/minami"
+        "recurse": false,
+        "template": "node_modules/docdash"
+    },
+    "templates": {
+        "docdash": {
+            "sort": false,
+            "collapse": false,
+            "wrap": false,
+            "typedefs": true,
+            "removeQuotes": "none"
+        }
     }
 }
+
