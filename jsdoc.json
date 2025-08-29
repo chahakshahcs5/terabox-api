@@ -1,8 +1,20 @@
 {
+    "tags": {
+        "allowUnknownTags": false,
+        "dictionaries": ["jsdoc"]
+    },
     "source": {
         "include": ["api.js", "helper.js"],
         "includePattern": ".js$",
         "excludePattern": "(node_modules|docs|html)"
+    },
+    "templates": {
+        "cleverLinks": false,
+        "monospaceLinks": false,
+        "default": {
+            "outputSourceFiles": true,
+            "includeDate": false
+        }
     },
     "opts": {
         "destination": "./html",
@@ -14,7 +26,7 @@
         "search": true,
         "commonNav": false,
         "wrap": true,
-        "typedefs": false,
+        "typedefs": true,
         "collapse": false,
         "removeQuotes": "none",
         "versionInOutputPath": true

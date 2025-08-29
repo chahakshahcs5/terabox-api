@@ -29,7 +29,7 @@ function makeRemoteFPath(sdir, sfile){
 /**
  * A utility class for handling application/x-www-form-urlencoded data
  * Wraps URLSearchParams with additional convenience methods and encoding behavior
- * @ignore
+ * @class
  */
 class FormUrlEncoded {
     /**
@@ -39,10 +39,6 @@ class FormUrlEncoded {
      * const form = new FormUrlEncoded({ foo: 'bar', baz: 'qux' });
      */
     constructor(params) {
-        /**
-         * @private
-         * @type {URLSearchParams}
-         */
         this.data = new URLSearchParams();
         if(typeof params === 'object' && params !== null){
             for (const [key, value] of Object.entries(params)) {
@@ -99,10 +95,10 @@ class FormUrlEncoded {
  * Generates a signed download token using a modified RC4-like algorithm
  *
  * This function implements a stream cipher similar to RC4 that:
- * 1. Initializes a permutation array using the secret key (s1)
- * 2. Generates a pseudorandom keystream
- * 3. XORs the input data (s2) with the keystream
- * 4. Returns the result as a Base64-encoded string
+ * <br>1. Initializes a permutation array using the secret key (s1)
+ * <br>2. Generates a pseudorandom keystream
+ * <br>3. XORs the input data (s2) with the keystream
+ * <br>4. Returns the result as a Base64-encoded string
  *
  * @param {string} s1 - The secret key used for signing (should be at least 1 character)
  * @param {string} s2 - The input data to be signed
@@ -110,7 +106,6 @@ class FormUrlEncoded {
  * @example
  * const signature = signDownload('secret-key', 'data-to-sign');
  * // Returns something like: "X3p8YFJjUA=="
- * @ignore
  */
 function signDownload(s1, s2) {
     // Initialize permutation array (p) and key array (a)
@@ -163,8 +158,7 @@ function signDownload(s1, s2) {
  * checkMd5val('d41d8cd98f00b204e9800998ecf8427e') // returns true
  * checkMd5val('D41D8CD98F00B204E9800998ECF8427E') // returns false (uppercase)
  * checkMd5val('z41d8cd98f00b204e9800998ecf8427e') // returns false (invalid character)
- * checkMd5val('d41d8cd98f')                      // returns false (too short)
- * @ignore
+ * checkMd5val('d41d8cd98f')                       // returns false (too short)
  */
 function checkMd5val(md5){
     if(typeof md5 !== 'string') return false;
@@ -189,7 +183,6 @@ function checkMd5val(md5){
  * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', 'invalid']) // false
  * checkMd5arr('not an array') // false
  * checkMd5arr([]) // false (empty array is considered invalid)
- * @ignore
  */
 function checkMd5arr(arr) {
     if (!Array.isArray(arr)) return false;
@@ -215,7 +208,6 @@ function checkMd5arr(arr) {
  * @example
  * decodeMd5('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6') // returns transformed value
  * decodeMd5('short') // returns 'short' (unchanged)
- * @ignore
  */
 function decodeMd5(md5) {
     // Return unchanged if not 32 characters
@@ -264,7 +256,6 @@ function decodeMd5(md5) {
  * changeBase64Type('a-b_c=', 2) // returns 'a+b/c='
  *
  * @see {@link https://tools.ietf.org/html/rfc4648#section-5|RFC 4648 §5} for URL-safe Base64
- * @ignore
  */
 function changeBase64Type(str, mode = 1) {
     return mode === 1
@@ -296,7 +287,6 @@ function changeBase64Type(str, mode = 1) {
  *
  * @requires crypto Node.js crypto module
  * @see changeBase64Type For Base64 format conversion
- * @ignore
  */
 function decryptAES(pp1, pp2) {
     // Convert from URL-safe Base64 to standard Base64
@@ -341,7 +331,6 @@ function decryptAES(pp1, pp2) {
  * encryptRSA('secret message', publicKey, 2);
  *
  * @requires crypto Node.js crypto module
- * @ignore
  */
 function encryptRSA(message, publicKeyPEM, mode = 1) {
     // Mode 2: Apply MD5 hash and length padding
@@ -387,7 +376,6 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
  * const token = prandGen(undefined, 'session123', 'encryptedPwd', 'user@example.com', '', 'randomValue');
  *
  * @requires crypto Node.js crypto module
- * @ignore
  */
 function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) {
     // Combine all parameters with hyphens
@@ -404,17 +392,46 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * including encryption utilities, API request handling, and session management.
  *
  * @class
- * @property {class} FormUrlEncoded - Form URL encoding utility
- * @property {function} SignDownload - Download signature generator
- * @property {function} CheckMd5Val - MD5 hash validator (single)
- * @property {function} CheckMd5Arr - MD5 hash validator (array)
- * @property {function} DecodeMd5 - Custom MD5 transformation
- * @property {function} ChangeBase64Type - Base64 format converter
- * @property {function} DecryptAES - AES decryption utility
- * @property {function} EncryptRSA - RSA encryption utility
+ * @property {class} FormUrlEncoded - Form URL encoding utility, see {@link module:api~FormUrlEncoded|class FormUrlEncoded}
+ * @property {function} SignDownload - Download signature generator, see {@link module:api~signDownload|function SignDownload}
+ * @property {function} CheckMd5Val - MD5 hash validator (single), see {@link module:api~checkMd5val|function CheckMd5Val}
+ * @property {function} CheckMd5Arr - MD5 hash validator (array), see {@link module:api~checkMd5Arr|function CheckMd5Arr}
+ * @property {function} DecodeMd5 - Custom MD5 transformation, see {@link module:api~decodeMd5|function DecodeMd5}
+ * @property {function} ChangeBase64Type - Base64 format converter, see {@link module:api~changeBase64Type|function ChangeBase64Type}
+ * @property {function} DecryptAES - AES decryption utility, see {@link module:api~DecryptAESl|function decryptAES}
+ * @property {function} EncryptRSA - RSA encryption utility, see {@link module:api~encryptRSA|function EncryptRSA}
  * @property {function} PRandGen - Pseudo-random hash generator
- * @property {string} TERABOX_DOMAIN - Default Terabox domain
+ * @property {string} TERABOX_DOMAIN - Default TeraBox domain
  * @property {number} TERABOX_TIMEOUT - Default API timeout (10 seconds)
+ * @property {Object} data - Application data including tokens and keys
+ * @property {string} data.csrf - CSRF token
+ * @property {string} data.logid - Log ID
+ * @property {string} data.pcftoken - PCF token
+ * @property {string} data.bdstoken - BDS token
+ * @property {string} data.jsToken - JavaScript token
+ * @property {string} data.pubkey - Public key
+ * @property {Object} params - Application parameters and configuration
+ * @property {string} params.bhost - base host name
+ * @property {string} params.whost - Web host URL
+ * @property {string} params.uhost - Upload host URL
+ * @property {string} params.lang - Language setting
+ * @property {Object} params.app - Application settings
+ * @property {number} params.app.app_id=250528 - Application ID
+ * @property {number} params.app.web=1 - Web flag
+ * @property {string} params.app.channel=dubox - Channel identifier
+ * @property {number} params.app.clienttype=0 - Client type
+ * @property {string} params.ver_android - Android version
+ * @property {string} params.ua - User agent string
+ * @property {string} params.cookie - Cookie string
+ * @property {Object} params.auth - Authentication data
+ * @property {number} params.account_id - Account ID
+ * @property {string} params.account_name - Account name
+ * @property {boolean} params.is_vip - VIP status flag
+ * @property {number} params.vip_type - VIP type
+ * @property {number} params.space_used - Used space in bytes
+ * @property {number} params.space_total - Total space in bytes
+ * @property {number} params.space_available - Available space in bytes
+ * @property {string} params.cursor - Cursor for pagination
  */
 class TeraBoxApp {
     // Encryption/Utility Methods 1
@@ -430,28 +447,11 @@ class TeraBoxApp {
     EncryptRSA = encryptRSA;
     PRandGen = prandGen;
     
-    /**
-     * Default Terabox Domain
-     * @type {string}
-     */
+    // Constants
     TERABOX_DOMAIN = 'terabox.com';
-    
-    /**
-     * Default API timeout in milliseconds (10 seconds)
-     * @type {number}
-     */
     TERABOX_TIMEOUT = 10000;
     
-    /**
-     * Application data including tokens and keys
-     * @type {Object}
-     * @property {string} csrf - CSRF token
-     * @property {string} logid - Log ID
-     * @property {string} pcftoken - PCF token
-     * @property {string} bdstoken - BDS token
-     * @property {string} jsToken - JavaScript token
-     * @property {string} pubkey - Public key
-     */
+    // app data
     data = {
         csrf: '',
         logid: '0',
@@ -461,31 +461,7 @@ class TeraBoxApp {
         pubkey: '',
     };
     
-    /**
-     * Application parameters and configuration
-     * @type {Object}
-     * @property {string} bhost - base host name
-     * @property {string} whost - Web host URL
-     * @property {string} uhost - Upload host URL
-     * @property {string} lang - Language setting
-     * @property {Object} app - Application settings
-     * @property {number} app.app_id - Application ID
-     * @property {number} app.web - Web flag
-     * @property {string} app.channel - Channel identifier
-     * @property {number} app.clienttype - Client type
-     * @property {string} ver_android - Android version
-     * @property {string} ua - User agent string
-     * @property {string} cookie - Cookie string
-     * @property {Object} auth - Authentication data
-     * @property {number} account_id - Account ID
-     * @property {string} account_name - Account name
-     * @property {boolean} is_vip - VIP status flag
-     * @property {number} vip_type - VIP type
-     * @property {number} space_used - Used space in bytes
-     * @property {number} space_total - Total space in bytes
-     * @property {number} space_available - Available space in bytes
-     * @property {string} cursor - Cursor for pagination
-     */
+    // Application parameters and configuration
     params = {
         whost: 'https://www.' + this.TERABOX_DOMAIN,
         uhost: 'https://c-www.' + this.TERABOX_DOMAIN,
@@ -1308,13 +1284,13 @@ class TeraBoxApp {
     /**
      * Retrieves the contents of a remote directory with specific file category
      * @param {number} [categoryId=1] - selected category:
-     *     1 - video,
-     *     2 - audio,
-     *     3 - pictures,
-     *     4 - documents,
-     *     5 - apps,
-     *     6 - other,
-     *     7 - torrent
+     *     <br>1 - video
+     *     <br>2 - audio
+     *     <br>3 - pictures
+     *     <br>4 - documents
+     *     <br>5 - apps
+     *     <br>6 - other
+     *     <br>7 - torrent
      * @param {string} remoteDir - Remote directory path to list
      * @param {number} [page=1] - Page number for pagination
      * @returns {Promise<Object>} The directory listing JSON (includes entries array)
@@ -2343,13 +2319,13 @@ class TeraBoxApp {
      * Retrieves the streaming contents of a remote file
      * @param {string} remotePath - Remote video file
      * @param {string} type - Streaming type:
-     *     M3U8_FLV_264_480,
-     *     M3U8_AUTO_240,
-     *     M3U8_AUTO_360,
-     *     M3U8_AUTO_480,
-     *     M3U8_AUTO_720,
-     *     M3U8_AUTO_1080,
-     *     M3U8_SUBTITLE_SRT
+     *    <br>M3U8_FLV_264_480
+     *    <br>M3U8_AUTO_240
+     *    <br>M3U8_AUTO_360
+     *    <br>M3U8_AUTO_480
+     *    <br>M3U8_AUTO_720
+     *    <br>M3U8_AUTO_1080
+     *    <br>M3U8_SUBTITLE_SRT
      * @returns {Promise<Object>} m3u8 playlist, or JSON with error
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
@@ -2502,4 +2478,6 @@ class TeraBoxApp {
     }
 }
 
+// exports
 export default TeraBoxApp;
+export { TeraBoxApp };
