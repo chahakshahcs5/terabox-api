@@ -144,13 +144,13 @@ function signDownload(s1, s2) {
 
 /**
  * Validates whether a string is a properly formatted MD5 hash
- *
- * Checks if the input:
- * 1. Is exactly 32 characters long
- * 2. Contains only hexadecimal characters (a-f, 0-9)
- * 3. Is in lowercase
- *
- * Note: This only validates the format, not the cryptographic correctness of the hash.
+ * <br>
+ * <br>Checks if the input:
+ * <br>1. Is exactly 32 characters long
+ * <br>2. Contains only hexadecimal characters (a-f, 0-9)
+ * <br>3. Is in lowercase
+ * <br>
+ * <br>Note: This only validates the format, not the cryptographic correctness of the hash.
  *
  * @param {*} md5 - The value to check (typically a string)
  * @returns {boolean} True if the input is a valid MD5 format, false otherwise
@@ -167,16 +167,16 @@ function checkMd5val(md5){
 
 /**
  * Validates that all elements in an array are properly formatted MD5 hashes
- *
- * Checks if:
- * 1. The input is an array
- * 2. Every element in the array passes checkMd5val() validation
- *    (32-character hexadecimal strings in lowercase)
+ * <br>
+ * <br>Checks if:
+ * <br>1. The input is an array
+ * <br>2. Every element in the array passes checkMd5val() validation
+ * <br>(32-character hexadecimal strings in lowercase)
  *
  * @param {*} arr - The array to validate
  * @returns {boolean} True if all elements are valid MD5 hashes, false otherwise
  *                   (also returns false if input is not an array)
- * @see checkMd5val For individual MD5 hash validation logic
+ * @see {@link module:api~checkMd5val|Function CheckMd5Val} for individual MD5 hash validation logic
  *
  * @example
  * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', '5d41402abc4b2a76b9719d911017c592']) // true
@@ -194,12 +194,12 @@ function checkMd5arr(arr) {
 
 /**
  * Applies a custom transformation to what appears to be an MD5 hash
- *
- * This function performs a series of reversible transformations on an input string
- * that appears to be an MD5 hash (32 hexadecimal characters). The transformation includes:
- * 1. Character restoration at position 9
- * 2. XOR operation with position-dependent values
- * 3. Byte reordering of the result
+ * <br>
+ * <br>This function performs a series of reversible transformations on an input string
+ * <br>that appears to be an MD5 hash (32 hexadecimal characters). The transformation includes:
+ * <br>1. Character restoration at position 9
+ * <br>2. XOR operation with position-dependent values
+ * <br>3. Byte reordering of the result
  *
  * @param {string} md5 - The input string (expected to be 32 hexadecimal characters)
  * @returns {string} The transformed result (32 hexadecimal characters)
@@ -236,11 +236,11 @@ function decodeMd5(md5) {
 
 /**
  * Converts between standard and URL-safe Base64 encoding formats
- *
- * Base64 strings may contain '+', '/' and '=' characters that need to be replaced
- * for safe use in URLs. This function provides bidirectional conversion:
- * - Mode 1: Converts to URL-safe Base64 (RFC 4648 §5)
- * - Mode 2: Converts back to standard Base64
+ * <br>
+ * <br>Base64 strings may contain '+', '/' and '=' characters that need to be replaced
+ * <br>for safe use in URLs. This function provides bidirectional conversion:
+ * <br>- Mode 1: Converts to URL-safe Base64 (RFC 4648 §5)
+ * <br>- Mode 2: Converts back to standard Base64
  *
  * @param {string} str - The Base64 string to convert
  * @param {number} [mode=1] - Conversion direction:
@@ -265,12 +265,12 @@ function changeBase64Type(str, mode = 1) {
 
 /**
  * Decrypts AES-128-CBC encrypted data using provided parameters
- *
- * This function:
- * 1. Converts both parameters from URL-safe Base64 to standard Base64
- * 2. Extracts the IV (first 16 bytes) and ciphertext from pp1
- * 3. Uses pp2 as the decryption key
- * 4. Performs AES-128-CBC decryption
+ * <br>
+ * <br>This function:
+ * <br>1. Converts both parameters from URL-safe Base64 to standard Base64
+ * <br>2. Extracts the IV (first 16 bytes) and ciphertext from pp1
+ * <br>3. Uses pp2 as the decryption key
+ * <br>4. Performs AES-128-CBC decryption
  *
  * @param {string} pp1 - Combined IV and ciphertext in URL-safe Base64 format:
  *                      First 16 bytes are IV, remainder is ciphertext
@@ -286,7 +286,7 @@ function changeBase64Type(str, mode = 1) {
  * );
  *
  * @requires crypto Node.js crypto module
- * @see changeBase64Type For Base64 format conversion
+ * @see {@link module:api~changeBase64Type|Function ChangeBase64Type} for Base64 format conversion
  */
 function decryptAES(pp1, pp2) {
     // Convert from URL-safe Base64 to standard Base64
@@ -310,10 +310,10 @@ function decryptAES(pp1, pp2) {
 
 /**
  * Encrypts data using RSA with a public key, with optional MD5 preprocessing
- *
- * Supports two encryption modes:
- * 1. Direct encryption of the message (default)
- * 2. MD5 hash preprocessing (applies MD5 + length padding before encryption)
+ * <br>
+ * <br>Supports two encryption modes:
+ * <br>1. Direct encryption of the message (default)
+ * <br>2. MD5 hash preprocessing (applies MD5 + length padding before encryption)
  *
  * @param {string} message - The plaintext message to encrypt
  * @param {string|Buffer} publicKeyPEM - RSA public key in PEM format
@@ -356,9 +356,9 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
 
 /**
  * Generates a pseudo-random SHA-1 hash from combined client parameters
- *
- * Creates a deterministic hash value by combining multiple client-specific parameters.
- * This is typically used for generating session tokens or unique identifiers.
+ * <br>
+ * <br>Creates a deterministic hash value by combining multiple client-specific parameters.
+ * <br>This is typically used for generating session tokens or unique identifiers.
  *
  * @param {string} [client='web'] - Client identifier (e.g., 'web', 'mobile')
  * @param {string} seval - Session evaluation parameter

@@ -10,7 +10,7 @@ DOCS_DIR = os.path.join(os.getcwd(), "html")
 
 try:
     print("🗑️ Deleting html folder...")
-    shutil.rmtree(DOCS_DIR)
+    shutil.rmtree(DOCS_DIR, ignore_errors=True)
     print("🚀 Generating JSDoc...")
     subprocess.run(["pnpm", "exec", "jsdoc", "-c", JSDOC_CONFIG], check=True)
 except subprocess.CalledProcessError as e:
