@@ -9,14 +9,15 @@
         "recurse": false,
         "template": "node_modules/docdash"
     },
-    "templates": {
-        "docdash": {
-            "sort": false,
-            "collapse": false,
-            "wrap": false,
-            "typedefs": true,
-            "removeQuotes": "none"
-        }
+    "docdash": {
+        "sort": false,
+        "search": true,
+        "commonNav": false,
+        "wrap": true,
+        "typedefs": false,
+        "collapse": false,
+        "removeQuotes": "none",
+        "versionInOutputPath": true
     }
 }
 
