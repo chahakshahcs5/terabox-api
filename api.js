@@ -7,6 +7,11 @@ import crypto from 'node:crypto';
 import tls from 'node:tls';
 
 /**
+ * Main module for api interacting with TeraBox
+ * @module api
+ */
+
+/**
  * Constructs a remote file path by combining a directory and filename, ensuring proper slash formatting
  * @param {string} sdir - The directory path (with or without trailing slash)
  * @param {string} sfile - The filename to append to the directory path
@@ -14,6 +19,7 @@ import tls from 'node:tls';
  * @example
  * makeRemoteFPath('documents', 'file.txt')    // returns 'documents/file.txt'
  * makeRemoteFPath('documents/', 'file.txt')   // returns 'documents/file.txt'
+ * @ignore
  */
 function makeRemoteFPath(sdir, sfile){
     const tdir = sdir.match(/\/$/) ? sdir : sdir + '/';
@@ -23,6 +29,7 @@ function makeRemoteFPath(sdir, sfile){
 /**
  * A utility class for handling application/x-www-form-urlencoded data
  * Wraps URLSearchParams with additional convenience methods and encoding behavior
+ * @ignore
  */
 class FormUrlEncoded {
     /**
@@ -103,6 +110,7 @@ class FormUrlEncoded {
  * @example
  * const signature = signDownload('secret-key', 'data-to-sign');
  * // Returns something like: "X3p8YFJjUA=="
+ * @ignore
  */
 function signDownload(s1, s2) {
     // Initialize permutation array (p) and key array (a)
@@ -156,6 +164,7 @@ function signDownload(s1, s2) {
  * checkMd5val('D41D8CD98F00B204E9800998ECF8427E') // returns false (uppercase)
  * checkMd5val('z41d8cd98f00b204e9800998ecf8427e') // returns false (invalid character)
  * checkMd5val('d41d8cd98f')                      // returns false (too short)
+ * @ignore
  */
 function checkMd5val(md5){
     if(typeof md5 !== 'string') return false;
@@ -180,6 +189,7 @@ function checkMd5val(md5){
  * checkMd5arr(['d41d8cd98f00b204e9800998ecf8427e', 'invalid']) // false
  * checkMd5arr('not an array') // false
  * checkMd5arr([]) // false (empty array is considered invalid)
+ * @ignore
  */
 function checkMd5arr(arr) {
     if (!Array.isArray(arr)) return false;
@@ -205,6 +215,7 @@ function checkMd5arr(arr) {
  * @example
  * decodeMd5('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6') // returns transformed value
  * decodeMd5('short') // returns 'short' (unchanged)
+ * @ignore
  */
 function decodeMd5(md5) {
     // Return unchanged if not 32 characters
@@ -253,6 +264,7 @@ function decodeMd5(md5) {
  * changeBase64Type('a-b_c=', 2) // returns 'a+b/c='
  *
  * @see {@link https://tools.ietf.org/html/rfc4648#section-5|RFC 4648 §5} for URL-safe Base64
+ * @ignore
  */
 function changeBase64Type(str, mode = 1) {
     return mode === 1
@@ -284,6 +296,7 @@ function changeBase64Type(str, mode = 1) {
  *
  * @requires crypto Node.js crypto module
  * @see changeBase64Type For Base64 format conversion
+ * @ignore
  */
 function decryptAES(pp1, pp2) {
     // Convert from URL-safe Base64 to standard Base64
@@ -328,6 +341,7 @@ function decryptAES(pp1, pp2) {
  * encryptRSA('secret message', publicKey, 2);
  *
  * @requires crypto Node.js crypto module
+ * @ignore
  */
 function encryptRSA(message, publicKeyPEM, mode = 1) {
     // Mode 2: Apply MD5 hash and length padding
@@ -373,6 +387,7 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
  * const token = prandGen(undefined, 'session123', 'encryptedPwd', 'user@example.com', '', 'randomValue');
  *
  * @requires crypto Node.js crypto module
+ * @ignore
  */
 function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) {
     // Combine all parameters with hyphens
@@ -389,7 +404,6 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * including encryption utilities, API request handling, and session management.
  *
  * @class
- * @exports TeraBoxApp
  * @property {class} FormUrlEncoded - Form URL encoding utility
  * @property {function} SignDownload - Download signature generator
  * @property {function} CheckMd5Val - MD5 hash validator (single)
