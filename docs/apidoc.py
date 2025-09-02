@@ -5,7 +5,7 @@ import shutil
 import sys
 import os
 
-JSDOC_CONFIG = os.path.join(os.getcwd(), "jsdoc.json")
+JSDOC_CONFIG = os.path.join(os.getcwd(), "docs/apidoc.json")
 DOCS_DIR = os.path.join(os.getcwd(), "html")
 
 try:

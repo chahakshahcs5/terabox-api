@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>docs/typedef.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -37,31 +37,67 @@
 
 <div id="main">
     
+    <h1 class="page-title">docs/typedef.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Application parameters and configuration.
+ *
+ * @typedef {Object} TeraBoxAppParams
+ * @property {string} whost - Web host URL: 'https://jp.[TERABOX_DOMAIN]'.
+ * @property {string} uhost - Upload host URL: 'https://c-jp.[TERABOX_DOMAIN]'.
+ * @property {string} lang - Language code setting, default - en (English).
+ * @property {TeraBoxAppParamsApp} app - Application settings.
+ * @property {string} ver_android - Android version.
+ * @property {string} ua - User agent string: 'terabox;[pc_app_version];PC;PC-Windows;[winver];WindowsTeraBox'.
+ * @property {string} cookie - Cookie string.
+ * @property {Object} auth - Authentication data (unused).
+ * @property {number} account_id - Account ID.
+ * @property {string} account_name - Account name.
+ * @property {boolean} is_vip - VIP status flag.
+ * @property {number} vip_type - VIP type:
+ *     &lt;br>0: Regular user
+ *     &lt;br>1: Regular premium
+ *     &lt;br>2: Super premium
+ * @property {number} space_used - Used space in bytes.
+ * @property {number} space_total - Total space in bytes.
+ * @property {number} space_available - Available space in bytes.
+ * @property {string} cursor - Cursor for pagination.
+ * @see {@link module:api~TeraBoxApp}
+ */
 
+/**
+ * Application settings.
+ *
+ * @typedef {Object} TeraBoxAppParamsApp
+ * @property {number} app_id=250528 - Application ID.
+ * @property {number} web=1 - Web flag.
+ * @property {string} channel=dubox - Channel identifier.
+ * @property {number} clienttype=0 - Client type.
+ * @see {@link TeraBoxAppParams}
+ */
 
-    <section class="package">
-        <h3> </h3>		
+/**
+ * @typedef {Object} CheckLoginResponse
+ * @property {number} errno - Error code:
+ *  &lt;br>&lt;code> 0&lt;/code>: OK
+ *  &lt;br>&lt;code>-6&lt;/code>: Bad auth cookie
+ * @property {string} newno - Unknown (always empty).
+ * @property {number} request_id - Request ID.
+ * @property {string} show_msg - Server message (in most cases empty).
+ * @property {number} [uk] - User ID (only if errno = 0).
+ * @see {@link module:api~TeraBoxApp#checkLogin}
+ */
+</code></pre>
+        </article>
     </section>
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
 
 
 

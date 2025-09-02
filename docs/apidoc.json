@@ -4,15 +4,17 @@
         "dictionaries": ["jsdoc"]
     },
     "source": {
-        "include": ["api.js", "helper.js"],
+        "include": [".", "docs"],
         "includePattern": ".js$",
-        "excludePattern": "(node_modules|docs|html)"
+        "excludePattern": "(node_modules|.md|html)"
     },
     "templates": {
         "cleverLinks": false,
         "monospaceLinks": false,
+        "useShortNamesInLinks": true,
         "default": {
             "outputSourceFiles": true,
+            "shortenName": true,
             "includeDate": false
         }
     },
@@ -29,6 +31,7 @@
         "typedefs": true,
         "collapse": false,
         "removeQuotes": "none",
+        "shortenTypes": true,
         "versionInOutputPath": true
     }
 }

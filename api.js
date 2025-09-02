@@ -386,23 +386,25 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
 }
 
 /**
- * TeraBox API Client Class
+ * TeraBoxApp API client class
  *
  * Provides a comprehensive interface for interacting with TeraBox services,
  * including encryption utilities, API request handling, and session management.
  *
  * @class
- * @property {class} FormUrlEncoded - Form URL encoding utility, see {@link module:api~FormUrlEncoded|class FormUrlEncoded}
- * @property {function} SignDownload - Download signature generator, see {@link module:api~signDownload|function SignDownload}
- * @property {function} CheckMd5Val - MD5 hash validator (single), see {@link module:api~checkMd5val|function CheckMd5Val}
- * @property {function} CheckMd5Arr - MD5 hash validator (array), see {@link module:api~checkMd5Arr|function CheckMd5Arr}
- * @property {function} DecodeMd5 - Custom MD5 transformation, see {@link module:api~decodeMd5|function DecodeMd5}
- * @property {function} ChangeBase64Type - Base64 format converter, see {@link module:api~changeBase64Type|function ChangeBase64Type}
- * @property {function} DecryptAES - AES decryption utility, see {@link module:api~DecryptAESl|function decryptAES}
- * @property {function} EncryptRSA - RSA encryption utility, see {@link module:api~encryptRSA|function EncryptRSA}
- * @property {function} PRandGen - Pseudo-random hash generator
+ * @property {module:api~FormUrlEncoded   } FormUrlEncoded - Form URL encoding utility
+ * @property {module:api~signDownload     } SignDownload - Download signature generator
+ * @property {module:api~checkMd5val      } CheckMd5Val - MD5 hash validator (single)
+ * @property {module:api~checkMd5arr      } CheckMd5Arr - MD5 hash validator (array)
+ * @property {module:api~decodeMd5        } DecodeMd5 - Custom MD5 transformation
+ * @property {module:api~changeBase64Type } ChangeBase64Type - Base64 format converter
+ * @property {module:api~decryptAES       } DecryptAES - AES decryption utility
+ * @property {module:api~encryptRSA       } EncryptRSA - RSA encryption utility
+ * @property {module:api~prandGen         } PRandGen - Pseudo-random hash generator
+ *
  * @property {string} TERABOX_DOMAIN - Default TeraBox domain
  * @property {number} TERABOX_TIMEOUT - Default API timeout (10 seconds)
+ *
  * @property {Object} data - Application data including tokens and keys
  * @property {string} data.csrf - CSRF token
  * @property {string} data.logid - Log ID
@@ -410,28 +412,8 @@ function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) 
  * @property {string} data.bdstoken - BDS token
  * @property {string} data.jsToken - JavaScript token
  * @property {string} data.pubkey - Public key
- * @property {Object} params - Application parameters and configuration
- * @property {string} params.bhost - base host name
- * @property {string} params.whost - Web host URL
- * @property {string} params.uhost - Upload host URL
- * @property {string} params.lang - Language setting
- * @property {Object} params.app - Application settings
- * @property {number} params.app.app_id=250528 - Application ID
- * @property {number} params.app.web=1 - Web flag
- * @property {string} params.app.channel=dubox - Channel identifier
- * @property {number} params.app.clienttype=0 - Client type
- * @property {string} params.ver_android - Android version
- * @property {string} params.ua - User agent string
- * @property {string} params.cookie - Cookie string
- * @property {Object} params.auth - Authentication data
- * @property {number} params.account_id - Account ID
- * @property {string} params.account_name - Account name
- * @property {boolean} params.is_vip - VIP status flag
- * @property {number} params.vip_type - VIP type
- * @property {number} params.space_used - Used space in bytes
- * @property {number} params.space_total - Total space in bytes
- * @property {number} params.space_available - Available space in bytes
- * @property {string} params.cursor - Cursor for pagination
+ *
+ * @property {TeraBoxAppParams} params - Application parameters and configuration
  */
 class TeraBoxApp {
     // Encryption/Utility Methods 1
@@ -463,8 +445,8 @@ class TeraBoxApp {
     
     // Application parameters and configuration
     params = {
-        whost: 'https://www.' + this.TERABOX_DOMAIN,
-        uhost: 'https://c-www.' + this.TERABOX_DOMAIN,
+        whost: 'https://jp.' + this.TERABOX_DOMAIN,
+        uhost: 'https://c-jp.' + this.TERABOX_DOMAIN,
         lang: 'en',
         app: {
             app_id: 250528,
@@ -573,7 +555,7 @@ class TeraBoxApp {
             this.params.account_id = parseInt(tdata.uk) || 0;
             if(typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0){
                 this.params.is_vip = true;
-                //this.params.vip_type = 2;
+                this.params.vip_type = 1;
             }
             
             return tdata;
@@ -599,7 +581,7 @@ class TeraBoxApp {
      */
     setVipDefaults(){
         this.params.is_vip = true;
-        this.params.vip_type = 2;
+        this.params.vip_type = 1; // 1: VIP, 2: SVIP
         this.params.space_total = Math.pow(1024, 3) * 2;
         this.params.space_available = Math.pow(1024, 3) * 2;
     }
@@ -707,10 +689,10 @@ class TeraBoxApp {
     }
     
     /**
-     * Checks login status of the current session
-     * @returns {Promise<Object>} The login status JSON data
+     * Checks login status of the current session.
+     * @returns {Promise<CheckLoginResponse>} The login status JSON data.
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails.
      * @async
-     * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
     async checkLogin(){
         const url = new URL(this.params.whost + '/api/check/login');
@@ -1284,13 +1266,13 @@ class TeraBoxApp {
     /**
      * Retrieves the contents of a remote directory with specific file category
      * @param {number} [categoryId=1] - selected category:
-     *     <br>1 - video
-     *     <br>2 - audio
-     *     <br>3 - pictures
-     *     <br>4 - documents
-     *     <br>5 - apps
-     *     <br>6 - other
-     *     <br>7 - torrent
+     *     <br>1: video
+     *     <br>2: audio
+     *     <br>3: pictures
+     *     <br>4: documents
+     *     <br>5: apps
+     *     <br>6: other
+     *     <br>7: torrent
      * @param {string} remoteDir - Remote directory path to list
      * @param {number} [page=1] - Page number for pagination
      * @returns {Promise<Object>} The directory listing JSON (includes entries array)
