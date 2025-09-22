@@ -13,7 +13,7 @@ importers:
         version: 1.2.2
       filesize:
         specifier: ^11.0.2
-        version: 11.0.7
+        version: 11.0.13
       tough-cookie:
         specifier: ^6.0.0
         version: 6.0.0
@@ -86,9 +86,9 @@ packages:
     resolution: {integrity: sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w==}
     engines: {node: '>=8'}
 
-  filesize@11.0.7:
-    resolution: {integrity: sha512-HozRSaD6ZrUdUVdSI9kJPsI9TzDZb+OZNL0xOWlxkQGfOsjh5Fp1AAI7GObJutOpclSBycHBDEREzwYcXPo8Ew==}
-    engines: {node: '>= 10.4.0'}
+  filesize@11.0.13:
+    resolution: {integrity: sha512-mYJ/qXKvREuO0uH8LTQJ6v7GsUvVOguqxg2VTwQUkyTPXXRRWPdjuUPVqdBrJQhvci48OHlNGRnux+Slr2Rnvw==}
+    engines: {node: '>= 10.8.0'}
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
@@ -214,7 +214,7 @@ snapshots:
 
   escape-string-regexp@2.0.0: {}
 
-  filesize@11.0.7: {}
+  filesize@11.0.13: {}
 
   graceful-fs@4.2.11: {}
 
