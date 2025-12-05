@@ -1,8 +1,6 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import readline from 'node:readline';
-import { Readable } from 'node:stream';
 
 import crc32 from 'crc-32';
 import { filesize } from 'filesize';
@@ -197,7 +195,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
         uploadData.all += chunkSize;
         uploadData.parts[partSeq] += chunkSize;
         printProgressLog('Uploading', uploadData, data.size);
-    }
+    };
     
     const blob_size = end + 1 - start;
     const buffer = Buffer.alloc(blob_size);
@@ -216,7 +214,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
             
             // check if we have chunks hash
             if (app.CheckMd5Val(chunkMd5) && res.md5 !== chunkMd5){
-                const md5Err = md5MismatchText(chunkMd5, res.md5, partSeq+1, data.hash.chunks.length)
+                const md5Err = md5MismatchText(chunkMd5, res.md5, partSeq+1, data.hash.chunks.length);
                 throw new Error(md5Err.join('\n\t'));
             }
             
@@ -225,7 +223,7 @@ async function uploadChunkTask(app, data, file, partSeq, uploadData, externalAbo
             if(!app.CheckMd5Val(chunkMd5) && !skipChunkHashCheck){
                 const calcChunkMd5 = crypto.createHash('md5').update(buffer).digest('hex');
                 if(calcChunkMd5 !== res.md5){
-                    const md5Err = md5MismatchText(calcChunkMd5, res.md5, partSeq+1, data.hash.chunks.length)
+                    const md5Err = md5MismatchText(calcChunkMd5, res.md5, partSeq+1, data.hash.chunks.length);
                     throw new Error(md5Err.join('\n\t'));
                 }
             }
@@ -280,7 +278,7 @@ function newProgressData() {
         all: 0,
         start: Date.now(),
         parts: {},
-    }
+    };
 }
 
 /**
@@ -306,7 +304,7 @@ async function uploadChunks(app, data, filePath, maxTasks = 10, maxTries = 5) {
             uploadData.parts[partSeq] = 0;
             if(data.uploaded[partSeq]){
                 const chunkSize = partSeq < totalChunks - 1 ? splitSize : lastChunkSize;
-                uploadData.parts[partSeq] = splitSize;
+                uploadData.parts[partSeq] = chunkSize;
             }
         }
         

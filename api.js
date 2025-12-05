@@ -1,8 +1,6 @@
 import { FormData, Client, buildConnector, request } from 'undici';
-import { Cookie, CookieJar } from 'tough-cookie';
-import { filesize } from 'filesize';
+import { CookieJar } from 'tough-cookie';
 
-import child_process from 'node:child_process';
 import crypto from 'node:crypto';
 import tls from 'node:tls';
 
@@ -344,10 +342,10 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     
     // Perform RSA encryption
     const encrypted = crypto.publicEncrypt({
-            key: publicKeyPEM,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
-        },
-        buffer,
+        key: publicKeyPEM,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
+    },
+    buffer,
     );
     
     // Return as Base64 string
@@ -570,8 +568,8 @@ class TeraBoxApp {
                 console.error(errorPrefix, error.message);
                 return;
             }
-            error = new Error('updateAppData', { cause: error });
-            console.error(errorPrefix, error);
+            const errorReturn = new Error('updateAppData', { cause: error });
+            console.error(errorPrefix, errorReturn);
         }
     }
     
@@ -632,7 +630,7 @@ class TeraBoxApp {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
-                   cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
+                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
@@ -837,7 +835,7 @@ class TeraBoxApp {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
-                   cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
+                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
                 rdata.data.ndus = ndus;
@@ -1429,7 +1427,7 @@ class TeraBoxApp {
         
         // check chunks hash
         if(!this.CheckMd5Arr(data.hash.chunks)){
-            const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761']
+            const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761'];
             
             if(data.size > 4 * 1024 * 1024){
                 predefinedHash.push('a5fc157d78e6ad1c7e114b056c92821e');
@@ -1444,7 +1442,7 @@ class TeraBoxApp {
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
-        const url = new URL(this.params.whost + `/api/precreate`);
+        const url = new URL(this.params.whost + '/api/precreate');
         
         try{
             if(this.data.jsToken === ''){
@@ -1534,7 +1532,7 @@ class TeraBoxApp {
         
         try{
             if(data.size < 256 * 1024){
-                throw new Error(`File size too small!`);
+                throw new Error('File size too small!');
             }
             
             const req = await request(url, {
@@ -1775,7 +1773,7 @@ class TeraBoxApp {
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
         
-        const url = new URL(this.params.whost + `/api/create`);
+        const url = new URL(this.params.whost + '/api/create');
         
         try{
             const req = await request(url, {
@@ -2061,7 +2059,7 @@ class TeraBoxApp {
      */
     async shortUrlList(shortUrl, remoteDir = '', page = 1){
         const url = new URL(this.params.whost + '/share/list');
-        remoteDir = remoteDir || ''
+        remoteDir = remoteDir || '';
         
         try{
             if(this.data.jsToken === ''){
@@ -2262,7 +2260,7 @@ class TeraBoxApp {
         try{
             const homeInfo = await this.getHomeInfo();
             if(homeInfo.errno !== 0){
-                throw new Error(`API error! Bad HomeInfo response`);
+                throw new Error('API error! Bad HomeInfo response');
             }
             
             const formData = new this.FormUrlEncoded({
@@ -2399,12 +2397,11 @@ class TeraBoxApp {
                 ...this.params.app,
                 version:  this.params.ver_android,
                 // num: 20000, ???
-                // page: page, ???
+                // page: page, // ???
             });
             
             const req = await request(url, {
                 method: 'GET',
-                body: formData.str(),
                 headers: {
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
