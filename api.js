@@ -344,9 +344,7 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     const encrypted = crypto.publicEncrypt({
         key: publicKeyPEM,
         padding: crypto.constants.RSA_PKCS1_PADDING,
-    },
-    buffer,
-    );
+    }, buffer);
     
     // Return as Base64 string
     return encrypted.toString('base64');
