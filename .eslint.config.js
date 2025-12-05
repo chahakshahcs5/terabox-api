@@ -18,11 +18,11 @@ export default [
         },
         rules: {
             'no-empty': ['error', { allowEmptyCatch: true }],
+            'no-unused-vars': ['warn', { args: 'none' }],
             indent: ['error', 4, { SwitchCase: 1 }],
             'linebreak-style': ['error', 'unix'],
             quotes: ['error', 'single'],
             semi: ['error', 'always'],
-            'no-unused-vars': 'warn',
         }
     },
 ];
