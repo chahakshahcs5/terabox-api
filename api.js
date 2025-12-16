@@ -441,7 +441,7 @@ class TeraBoxApp {
     
     // Application parameters and configuration
     params = {
-        whost: 'https://jp.' + this.TERABOX_DOMAIN,
+        whost: 'https://www.' + this.TERABOX_DOMAIN,
         uhost: 'https://c-jp.' + this.TERABOX_DOMAIN,
         lang: 'en',
         app: {
@@ -501,6 +501,9 @@ class TeraBoxApp {
             });
             
             if(req.statusCode === 302){
+                if(req.headers.location === '/login'){
+                    req.headers.location = this.params.whost + '/login';
+                }
                 const newUrl = new URL(req.headers.location);
                 if(this.params.whost !== newUrl.origin){
                     this.params.whost = newUrl.origin;
