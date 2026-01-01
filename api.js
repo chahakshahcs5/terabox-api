@@ -2423,6 +2423,128 @@ class TeraBoxApp {
     }
     
     /**
+     * Queries transfer information for a shared URL
+     * <br>
+     * <br>Used to check if shared files can be transferred to the user's account
+     * <br>before performing the actual transfer operation.
+     *
+     * @param {number} shareId - The share ID from shortUrlList response
+     * @param {number} fromUk - The owner user ID (uk) from shortUrlList response
+     * @returns {Promise<Object>} The query transfer response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async querySurlTransfer(shareId, fromUk){
+        const url = new URL(this.params.whost + '/share/querysurltransfer');
+        
+        try{
+            if(this.data.jsToken === ''){
+                await this.updateAppData();
+            }
+            
+            url.search = new URLSearchParams({
+                ...this.params.app,
+                jsToken: this.data.jsToken,
+                'dp-logid': this.data.logid,
+                bdstoken: this.data.bdstoken,
+            });
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('sid', shareId);
+            formData.append('suk', fromUk);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('querySurlTransfer', { cause: error });
+        }
+    }
+    
+    /**
+     * Transfers (saves) shared files to the user's account
+     * <br>
+     * <br>This method saves files from a shared link to the user's own TeraBox storage.
+     * <br>The files will be copied to the specified destination path.
+     *
+     * @param {number} shareId - The share ID of the shared content
+     * @param {number} fromUk - The user ID (uk) of the share owner
+     * @param {Array<number>} fsIds - Array of file system IDs to transfer
+     * @param {string} [destPath='/'] - Destination path in user's storage
+     * @param {Object} [options={}] - Optional parameters
+     * @param {string} [options.ondup='newcopy'] - Duplicate handling strategy
+     * @returns {Promise<Object>} The transfer response JSON (includes task_id on success)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async shareTransfer(shareId, fromUk, fsIds, destPath = '/', options = {}){
+        const url = new URL(this.params.whost + '/share/transfer');
+        
+        try{
+            if(this.data.jsToken === ''){
+                await this.updateAppData();
+            }
+            
+            url.search = new URLSearchParams({
+                ...this.params.app,
+                jsToken: this.data.jsToken,
+                'dp-logid': this.data.logid,
+                ondup: options.ondup || 'newcopy',
+                async: 1,
+                shareid: shareId,
+                from: fromUk,
+            });
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('fsidlist', JSON.stringify(fsIds));
+            formData.append('path', destPath);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            // Handle verification errors by refreshing token and retrying
+            if(rdata.errno === 400810){
+                await this.updateAppData();
+                return await this.shareTransfer(shareId, fromUk, fsIds, destPath, options);
+            }
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareTransfer', { cause: error });
+        }
+    }
+    
+    /**
      * Retrieves the RSA public key from the server for encryption
      * @returns {Promise<Object>} The public key response JSON (includes pp1 and pp2)
      * @async
