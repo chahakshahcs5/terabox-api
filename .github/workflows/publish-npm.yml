@@ -28,7 +28,7 @@ jobs:
       - name: PNPM Install
         run: pnpm install
       - name: PNPM Publish
-        run: pnpm publish
+        run: pnpm publish --publish-branch package
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
