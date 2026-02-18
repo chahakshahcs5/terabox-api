@@ -1,8 +1,6 @@
 import { FormData, Client, buildConnector, request } from 'undici';
-import { Cookie, CookieJar } from 'tough-cookie';
-import { filesize } from 'filesize';
+import { CookieJar } from 'tough-cookie';
 
-import child_process from 'node:child_process';
 import crypto from 'node:crypto';
 import tls from 'node:tls';
 
@@ -344,11 +342,9 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     
     // Perform RSA encryption
     const encrypted = crypto.publicEncrypt({
-            key: publicKeyPEM,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
-        },
-        buffer,
-    );
+        key: publicKeyPEM,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
+    }, buffer);
     
     // Return as Base64 string
     return encrypted.toString('base64');
@@ -445,7 +441,7 @@ class TeraBoxApp {
     
     // Application parameters and configuration
     params = {
-        whost: 'https://jp.' + this.TERABOX_DOMAIN,
+        whost: 'https://www.' + this.TERABOX_DOMAIN,
         uhost: 'https://c-jp.' + this.TERABOX_DOMAIN,
         lang: 'en',
         app: {
@@ -505,6 +501,9 @@ class TeraBoxApp {
             });
             
             if(req.statusCode === 302){
+                if(req.headers.location === '/login'){
+                    req.headers.location = this.params.whost + '/login';
+                }
                 const newUrl = new URL(req.headers.location);
                 if(this.params.whost !== newUrl.origin){
                     this.params.whost = newUrl.origin;
@@ -570,8 +569,8 @@ class TeraBoxApp {
                 console.error(errorPrefix, error.message);
                 return;
             }
-            error = new Error('updateAppData', { cause: error });
-            console.error(errorPrefix, error);
+            const errorReturn = new Error('updateAppData', { cause: error });
+            console.error(errorPrefix, errorReturn);
         }
     }
     
@@ -632,7 +631,7 @@ class TeraBoxApp {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
-                   cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
+                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
@@ -837,7 +836,7 @@ class TeraBoxApp {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
                 for(const cookie of req.headers['set-cookie']){
-                   cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
+                    cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
                 rdata.data.ndus = ndus;
@@ -1429,7 +1428,7 @@ class TeraBoxApp {
         
         // check chunks hash
         if(!this.CheckMd5Arr(data.hash.chunks)){
-            const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761']
+            const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761'];
             
             if(data.size > 4 * 1024 * 1024){
                 predefinedHash.push('a5fc157d78e6ad1c7e114b056c92821e');
@@ -1444,7 +1443,7 @@ class TeraBoxApp {
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         
-        const url = new URL(this.params.whost + `/api/precreate`);
+        const url = new URL(this.params.whost + '/api/precreate');
         
         try{
             if(this.data.jsToken === ''){
@@ -1534,7 +1533,7 @@ class TeraBoxApp {
         
         try{
             if(data.size < 256 * 1024){
-                throw new Error(`File size too small!`);
+                throw new Error('File size too small!');
             }
             
             const req = await request(url, {
@@ -1775,7 +1774,7 @@ class TeraBoxApp {
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
         
-        const url = new URL(this.params.whost + `/api/create`);
+        const url = new URL(this.params.whost + '/api/create');
         
         try{
             const req = await request(url, {
@@ -2061,7 +2060,7 @@ class TeraBoxApp {
      */
     async shortUrlList(shortUrl, remoteDir = '', page = 1){
         const url = new URL(this.params.whost + '/share/list');
-        remoteDir = remoteDir || ''
+        remoteDir = remoteDir || '';
         
         try{
             if(this.data.jsToken === ''){
@@ -2262,7 +2261,7 @@ class TeraBoxApp {
         try{
             const homeInfo = await this.getHomeInfo();
             if(homeInfo.errno !== 0){
-                throw new Error(`API error! Bad HomeInfo response`);
+                throw new Error('API error! Bad HomeInfo response');
             }
             
             const formData = new this.FormUrlEncoded({
@@ -2399,12 +2398,11 @@ class TeraBoxApp {
                 ...this.params.app,
                 version:  this.params.ver_android,
                 // num: 20000, ???
-                // page: page, ???
+                // page: page, // ???
             });
             
             const req = await request(url, {
                 method: 'GET',
-                body: formData.str(),
                 headers: {
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
@@ -2421,6 +2419,128 @@ class TeraBoxApp {
         }
         catch (error) {
             throw new Error('getRecentUploads', { cause: error });
+        }
+    }
+    
+    /**
+     * Queries transfer information for a shared URL
+     * <br>
+     * <br>Used to check if shared files can be transferred to the user's account
+     * <br>before performing the actual transfer operation.
+     *
+     * @param {number} shareId - The share ID from shortUrlList response
+     * @param {number} fromUk - The owner user ID (uk) from shortUrlList response
+     * @returns {Promise<Object>} The query transfer response JSON
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async querySurlTransfer(shareId, fromUk){
+        const url = new URL(this.params.whost + '/share/querysurltransfer');
+        
+        try{
+            if(this.data.jsToken === ''){
+                await this.updateAppData();
+            }
+            
+            url.search = new URLSearchParams({
+                ...this.params.app,
+                jsToken: this.data.jsToken,
+                'dp-logid': this.data.logid,
+                bdstoken: this.data.bdstoken,
+            });
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('sid', shareId);
+            formData.append('suk', fromUk);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('querySurlTransfer', { cause: error });
+        }
+    }
+    
+    /**
+     * Transfers (saves) shared files to the user's account
+     * <br>
+     * <br>This method saves files from a shared link to the user's own TeraBox storage.
+     * <br>The files will be copied to the specified destination path.
+     *
+     * @param {number} shareId - The share ID of the shared content
+     * @param {number} fromUk - The user ID (uk) of the share owner
+     * @param {Array<number>} fsIds - Array of file system IDs to transfer
+     * @param {string} [destPath='/'] - Destination path in user's storage
+     * @param {Object} [options={}] - Optional parameters
+     * @param {string} [options.ondup='newcopy'] - Duplicate handling strategy
+     * @returns {Promise<Object>} The transfer response JSON (includes task_id on success)
+     * @async
+     * @throws {Error} Throws error if HTTP status is not 200 or request fails
+     */
+    async shareTransfer(shareId, fromUk, fsIds, destPath = '/', options = {}){
+        const url = new URL(this.params.whost + '/share/transfer');
+        
+        try{
+            if(this.data.jsToken === ''){
+                await this.updateAppData();
+            }
+            
+            url.search = new URLSearchParams({
+                ...this.params.app,
+                jsToken: this.data.jsToken,
+                'dp-logid': this.data.logid,
+                ondup: options.ondup || 'newcopy',
+                async: 1,
+                shareid: shareId,
+                from: fromUk,
+            });
+            
+            const formData = new this.FormUrlEncoded();
+            formData.append('fsidlist', JSON.stringify(fsIds));
+            formData.append('path', destPath);
+            
+            const req = await request(url, {
+                method: 'POST',
+                body: formData.str(),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': this.params.ua,
+                    'Cookie': this.params.cookie,
+                    Referer: this.params.whost,
+                },
+                signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
+            });
+            
+            if (req.statusCode !== 200) {
+                throw new Error(`HTTP error! Status: ${req.statusCode}`);
+            }
+            
+            const rdata = await req.body.json();
+            // Handle verification errors by refreshing token and retrying
+            if(rdata.errno === 400810){
+                await this.updateAppData();
+                return await this.shareTransfer(shareId, fromUk, fsIds, destPath, options);
+            }
+            return rdata;
+        }
+        catch (error) {
+            throw new Error('shareTransfer', { cause: error });
         }
     }
     

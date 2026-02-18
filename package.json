@@ -1,12 +1,12 @@
 {
     "name": "terabox-api",
     "name_ext": "TeraBox API",
-    "version": "2.5.0",
+    "version": "2.6.2",
     "main": "api.js",
     "type": "module",
     "scripts": {
         "html": "python docs/apidoc.py",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "lint": "eslint . --config .eslint.config.js"
     },
     "keywords": [
         "terabox"
@@ -17,7 +17,7 @@
     "homepage": "https://github.com/seiya-npm/terabox-api#readme",
     "repository": {
         "type": "git",
-        "url": "https://github.com/seiya-npm/terabox-api.git"
+        "url": "git+https://github.com/seiya-npm/terabox-api.git"
     },
     "bugs": {
         "url": "https://github.com/seiya-npm/terabox-api/issues"
@@ -26,10 +26,13 @@
         "crc-32": "^1.2.2",
         "filesize": "^11.0.2",
         "tough-cookie": "^6.0.0",
-        "undici": "^7.12.0"
+        "undici": "^7.18.2"
     },
     "devDependencies": {
+        "@eslint/js": "^9.39.1",
         "docdash": "^2.0.2",
+        "eslint": "^9.39.1",
+        "globals": "^17.0.0",
         "jsdoc": "^4.0.4"
     }
 }
