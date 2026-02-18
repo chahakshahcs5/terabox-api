@@ -5,21 +5,31 @@ on:
     tags:
       - 'api-*.*.*'
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write
+
 jobs:
   publish:
+    name: Publish NPM
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
+          node-version: 25
+          registry-url: 'https://registry.npmjs.org'
+      - name: PNPM Setup
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
-      - run: pnpm install
-      - uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-      - uses: softprops/action-gh-release@v2
+          version: 10
+      - name: PNPM Install
+        run: pnpm install
+      - name: PNPM Publish
+        run: pnpm publish --no-git-checks
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
