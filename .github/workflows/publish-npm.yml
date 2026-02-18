@@ -5,11 +5,7 @@ on:
   push:
     tags:
       - 'api-*.*.*'
-
-permissions:
-  id-token: write  # Required for OIDC
-  contents: write
-
+      
 jobs:
   publish:
     name: Publish NPM
@@ -29,8 +25,10 @@ jobs:
       - name: PNPM Install
         run: pnpm install
       - name: PNPM Publish
-        run: pnpm publish --no-git-checks
+        run: pnpm publish --no-git-checks --access public
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           generate_release_notes: true
