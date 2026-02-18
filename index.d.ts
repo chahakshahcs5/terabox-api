@@ -419,13 +419,13 @@ declare module "@chahakshah/terabox-api/helper" {
   export function getChunkSize(fileSize: number, is_vip?: boolean): number;
   export function hashFile(
     filePath: string
-  ): Promise<import("terabox-api").FileHashData>;
+  ): Promise<import("@chahakshah/terabox-api").FileHashData>;
   export function uploadChunks(
-    app: import("terabox-api").default,
-    data: import("terabox-api").UploadData,
+    app: import("@chahakshah/terabox-api").default,
+    data: import("@chahakshah/terabox-api").UploadData,
     filePath: string,
     maxTasks?: number,
     maxTries?: number
-  ): Promise<{ ok: boolean; data: import("terabox-api").UploadData }>;
+  ): Promise<{ ok: boolean; data: import("@chahakshah/terabox-api").UploadData }>;
   export function unwrapErrorMessage(err: any): string | undefined;
 }
