@@ -1,6 +1,6 @@
 // index.d.ts
 
-declare module "terabox-api" {
+declare module "@chahakshah/terabox-api" {
   export interface FormUrlEncodedParams {
     [key: string]: string;
   }
@@ -415,7 +415,7 @@ declare module "terabox-api" {
 
   export default TeraBoxApp;
 }
-declare module "terabox-api/helper" {
+declare module "@chahakshah/terabox-api/helper" {
   export function getChunkSize(fileSize: number, is_vip?: boolean): number;
   export function hashFile(
     filePath: string
