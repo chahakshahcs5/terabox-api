@@ -1,38 +1,38 @@
 {
-    "name": "@chahakshah/terabox-api",
-    "name_ext": "TeraBox API",
-    "version": "2.6.3",
-    "main": "api.js",
-    "type": "module",
-    "scripts": {
-        "html": "python docs/apidoc.py",
-        "lint": "eslint . --config .eslint.config.js"
-    },
-    "keywords": [
-        "terabox"
-    ],
-    "author": "Chahak Shah",
-    "license": "MIT",
-    "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
-    "homepage": "https://github.com/chahakshahcs5/terabox-api#readme",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/chahakshahcs5/terabox-api.git"
-    },
-    "bugs": {
-        "url": "https://github.com/chahakshahcs5/terabox-api/issues"
-    },
-    "dependencies": {
-        "crc-32": "^1.2.2",
-        "filesize": "^11.0.2",
-        "tough-cookie": "^6.0.0",
-        "undici": "^7.18.2"
-    },
-    "devDependencies": {
-        "@eslint/js": "^9.39.1",
-        "docdash": "^2.0.2",
-        "eslint": "^9.39.1",
-        "globals": "^17.0.0",
-        "jsdoc": "^4.0.4"
-    }
+  "name": "@chahakshah/terabox-api",
+  "name_ext": "TeraBox API",
+  "version": "2.6.4",
+  "main": "api.js",
+  "type": "module",
+  "scripts": {
+    "html": "python docs/apidoc.py",
+    "lint": "eslint . --config .eslint.config.js"
+  },
+  "keywords": [
+    "terabox"
+  ],
+  "author": "Chahak Shah",
+  "license": "MIT",
+  "description": "NodeJS tool for interacting with the TeraBox cloud service without the need to use the website or app ☁️",
+  "homepage": "https://github.com/chahakshahcs5/terabox-api#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chahakshahcs5/terabox-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chahakshahcs5/terabox-api/issues"
+  },
+  "dependencies": {
+    "crc-32": "^1.2.2",
+    "filesize": "^11.0.2",
+    "tough-cookie": "^6.0.0",
+    "undici": "^7.18.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "docdash": "^2.0.2",
+    "eslint": "^9.39.1",
+    "globals": "^17.0.0",
+    "jsdoc": "^4.0.4"
+  }
 }
