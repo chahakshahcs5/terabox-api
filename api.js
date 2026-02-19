@@ -1676,7 +1676,7 @@ class TeraBoxApp {
         clearTimeout(timeoutId);
         
         if (req.statusCode !== 200) {
-            throw new Error(`HTTP error! Status: ${req}`);
+            throw new Error(`HTTP error! Status: ${JSON.stringify(req)}`);
         }
         
         const res = await req.body.json();
