@@ -19,7 +19,7 @@ import tls from 'node:tls';
  * makeRemoteFPath('documents/', 'file.txt')   // returns 'documents/file.txt'
  * @ignore
  */
-function makeRemoteFPath(sdir, sfile){
+function makeRemoteFPath(sdir, sfile) {
     const tdir = sdir.match(/\/$/) ? sdir : sdir + '/';
     return tdir + sfile;
 }
@@ -38,7 +38,7 @@ class FormUrlEncoded {
      */
     constructor(params) {
         this.data = new URLSearchParams();
-        if(typeof params === 'object' && params !== null){
+        if (typeof params === 'object' && params !== null) {
             for (const [key, value] of Object.entries(params)) {
                 this.data.append(key, value);
             }
@@ -50,7 +50,7 @@ class FormUrlEncoded {
      * @param {string} value - The parameter value
      * @returns {void}
      */
-    set(param, value){
+    set(param, value) {
         this.data.set(param, value);
     }
     /**
@@ -59,7 +59,7 @@ class FormUrlEncoded {
      * @param {string} value - The parameter value
      * @returns {void}
      */
-    append(param, value){
+    append(param, value) {
         this.data.append(param, value);
     }
     /**
@@ -67,7 +67,7 @@ class FormUrlEncoded {
      * @param {string} param - The parameter name to remove
      * @returns {void}
      */
-    delete(param){
+    delete(param) {
         this.data.delete(param);
     }
     /**
@@ -77,14 +77,14 @@ class FormUrlEncoded {
      * @example
      * form.str(); // returns "foo=bar&baz=qux"
      */
-    str(){
+    str() {
         return this.data.toString().replace(/\+/g, '%20');
     }
     /**
      * Returns the underlying URLSearchParams object
      * @returns {URLSearchParams} The native URLSearchParams instance
      */
-    url(){
+    url() {
         return this.data;
     }
 }
@@ -110,21 +110,21 @@ function signDownload(s1, s2) {
     const p = new Uint8Array(256);
     const a = new Uint8Array(256);
     const result = [];
-    
+
     // Key-scheduling algorithm (KSA)
     // Initialize the permutation array with the secret key
     Array.from({ length: 256 }, (_, i) => {
         a[i] = s1.charCodeAt(i % s1.length);
         p[i] = i;
     });
-    
+
     // Scramble the permutation array using the key
     let j = 0;
     Array.from({ length: 256 }, (_, i) => {
         j = (j + p[i] + a[i]) % 256;
         [p[i], p[j]] = [p[j], p[i]]; // swap
     });
-    
+
     // Pseudo-random generation algorithm (PRGA)
     // Generate keystream and XOR with input data
     let i = 0; j = 0;
@@ -135,7 +135,7 @@ function signDownload(s1, s2) {
         const k = p[(p[i] + p[j]) % 256];
         result.push(s2.charCodeAt(q) ^ k);
     });
-    
+
     // Return the result as Base64
     return Buffer.from(result).toString('base64');
 }
@@ -158,8 +158,8 @@ function signDownload(s1, s2) {
  * checkMd5val('z41d8cd98f00b204e9800998ecf8427e') // returns false (invalid character)
  * checkMd5val('d41d8cd98f')                       // returns false (too short)
  */
-function checkMd5val(md5){
-    if(typeof md5 !== 'string') return false;
+function checkMd5val(md5) {
+    if (typeof md5 !== 'string') return false;
     return /^[a-f0-9]{32}$/.test(md5);
 }
 
@@ -210,25 +210,25 @@ function checkMd5arr(arr) {
 function decodeMd5(md5) {
     // Return unchanged if not 32 characters
     if (md5.length !== 32) return md5;
-    
+
     // Restore character at position 9
     const restoredHexChar = (md5.charCodeAt(9) - 'g'.charCodeAt(0)).toString(16);
     const o = md5.slice(0, 9) + restoredHexChar + md5.slice(10);
-    
+
     // Apply XOR transformation to each character
     let n = '';
     for (let i = 0; i < o.length; i++) {
         const orig = parseInt(o[i], 16) ^ (i & 15);
         n += orig.toString(16);
     }
-    
+
     // Reorder the bytes in the result
     const e =
         n.slice(8, 16) +  // original bytes 8-15 (now first)
         n.slice(0, 8) +   // original bytes 0-7 (now second)
         n.slice(24, 32) + // original bytes 24-31 (now third)
         n.slice(16, 24);   // original bytes 16-23 (now last)
-    
+
     return e;
 }
 
@@ -258,7 +258,7 @@ function decodeMd5(md5) {
 function changeBase64Type(str, mode = 1) {
     return mode === 1
         ? str.replace(/\+/g, '-').replace(/\//g, '_')  // to url-safe
-        : str.replace(/-/g,  '+').replace(/_/g,  '/'); // to standard
+        : str.replace(/-/g, '+').replace(/_/g, '/'); // to standard
 }
 
 /**
@@ -290,19 +290,19 @@ function decryptAES(pp1, pp2) {
     // Convert from URL-safe Base64 to standard Base64
     pp1 = changeBase64Type(pp1, 2);
     pp2 = changeBase64Type(pp2, 2);
-    
+
     // Extract ciphertext (after first 16 bytes) and IV (first 16 bytes)
     const cipherText = pp1.substring(16);
     const key = Buffer.from(pp2, 'utf8');
     const iv = Buffer.from(pp1.substring(0, 16), 'utf8');
-    
+
     // Create decipher with AES-128-CBC algorithm
     const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
-    
+
     // Perform decryption
     let decrypted = decipher.update(cipherText, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
 }
 
@@ -334,18 +334,18 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
     // Mode 2: Apply MD5 hash and length padding
     if (mode === 2) {
         const md5 = crypto.createHash('md5').update(message).digest('hex');
-        message = md5 + (md5.length<10?'0':'') + md5.length;
+        message = md5 + (md5.length < 10 ? '0' : '') + md5.length;
     }
-    
+
     // Convert message to Buffer
     const buffer = Buffer.from(message, 'utf8');
-    
+
     // Perform RSA encryption
     const encrypted = crypto.publicEncrypt({
         key: publicKeyPEM,
         padding: crypto.constants.RSA_PKCS1_PADDING,
     }, buffer);
-    
+
     // Return as Base64 string
     return encrypted.toString('base64');
 }
@@ -376,7 +376,7 @@ function encryptRSA(message, publicKeyPEM, mode = 1) {
 function prandGen(client = 'web', seval, encpwd, email, browserid = '', random) {
     // Combine all parameters with hyphens
     const combined = `${client}-${seval}-${encpwd}-${email}-${browserid}-${random}`;
-    
+
     // Generate SHA-1 hash and return as hex string
     return crypto.createHash('sha1').update(combined).digest('hex');
 }
@@ -418,17 +418,17 @@ class TeraBoxApp {
     CheckMd5Val = checkMd5val;
     CheckMd5Arr = checkMd5arr;
     DecodeMd5 = decodeMd5;
-    
+
     // Encryption/Utility Methods 2
     ChangeBase64Type = changeBase64Type;
     DecryptAES = decryptAES;
     EncryptRSA = encryptRSA;
     PRandGen = prandGen;
-    
+
     // Constants
     TERABOX_DOMAIN = 'terabox.com';
-    TERABOX_TIMEOUT = 20000;
-    
+    TERABOX_TIMEOUT = 10000;
+
     // app data
     data = {
         csrf: '',
@@ -438,7 +438,7 @@ class TeraBoxApp {
         jsToken: '',
         pubkey: '',
     };
-    
+
     // Application parameters and configuration
     params = {
         whost: 'https://www.' + this.TERABOX_DOMAIN,
@@ -463,7 +463,7 @@ class TeraBoxApp {
         space_available: Math.pow(1024, 3),
         cursor: 'null',
     };
-    
+
     /**
      * Creates a new TeraBoxApp instance
      * @param {string} authData - Authentication data (NDUS token)
@@ -472,14 +472,14 @@ class TeraBoxApp {
      */
     constructor(authData, authType = 'ndus') {
         this.params.cookie = `lang=${this.params.lang}`;
-        if(authType === 'ndus'){
+        if (authType === 'ndus') {
             this.params.cookie += authData ? '; ndus=' + authData : '';
         }
-        else{
+        else {
             throw new Error('initTBApp', { cause: 'AuthType Not Supported!' });
         }
     }
-    
+
     /**
      * Updates application data including tokens and user information
      * @param {string} [customPath] - Custom path to use for the update request
@@ -488,24 +488,24 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if request fails or parsing fails
      */
-    async updateAppData(customPath, retries = 4){
+    async updateAppData(customPath, retries = 4) {
         const url = new URL(this.params.whost + (customPath ? `/${customPath}` : '/main'));
-        
-        try{
+
+        try {
             const req = await request(url, {
-                headers:{
+                headers: {
                     'User-Agent': this.params.ua,
                     'Cookie': this.params.cookie,
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT + 10000),
             });
-            
-            if(req.statusCode === 302){
-                if(req.headers.location === '/login'){
+
+            if (req.statusCode === 302) {
+                if (req.headers.location === '/login') {
                     req.headers.location = this.params.whost + '/login';
                 }
                 const newUrl = new URL(req.headers.location);
-                if(this.params.whost !== newUrl.origin){
+                if (this.params.whost !== newUrl.origin) {
                     this.params.whost = newUrl.origin;
                     console.warn(`[WARN] Default hostname changed to ${newUrl.origin}`);
                 }
@@ -513,59 +513,59 @@ class TeraBoxApp {
                 const finalUrl = toPathname + newUrl.search;
                 return await this.updateAppData(finalUrl, retries);
             }
-            
-            if(req.headers['set-cookie']){
+
+            if (req.headers['set-cookie']) {
                 const cJar = new CookieJar();
                 this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
-                if(typeof req.headers['set-cookie'] === 'string'){
+                if (typeof req.headers['set-cookie'] === 'string') {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
-                for(const cookie of req.headers['set-cookie']){
+                for (const cookie of req.headers['set-cookie']) {
                     cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
-            
+
             const rdata = await req.body.text();
             const tdataRegex = /<script>var templateData = (.*);<\/script>/;
             const jsTokenRegex = /window.jsToken%20%3D%20a%7D%3Bfn%28%22(.*)%22%29/;
             const tdata = rdata.match(tdataRegex) ? JSON.parse(rdata.match(tdataRegex)[1].split(';</script>')[0]) : {};
             const isLoginReq = req.headers.location === '/login' ? true : false;
-            
-            if(tdata.jsToken){
+
+            if (tdata.jsToken) {
                 tdata.jsToken = tdata.jsToken.match(/%28%22(.*)%22%29/)[1];
             }
-            else if(rdata.match(jsTokenRegex)){
+            else if (rdata.match(jsTokenRegex)) {
                 tdata.jsToken = rdata.match(jsTokenRegex)[1];
             }
-            else if(isLoginReq){
+            else if (isLoginReq) {
                 console.error('[ERROR] Failed to update jsToken [Login Required]');
             }
-            
-            if(req.headers.logid){
+
+            if (req.headers.logid) {
                 this.data.logid = req.headers.logid;
             }
-            
+
             this.data.csrf = tdata.csrf || '';
             this.data.pcftoken = tdata.pcftoken || '';
             this.data.bdstoken = tdata.bdstoken || '';
             this.data.jsToken = tdata.jsToken || '';
-            
+
             this.params.account_id = parseInt(tdata.uk) || 0;
-            if(typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0){
+            if (typeof tdata.userVipIdentity === 'number' && tdata.userVipIdentity > 0) {
                 this.params.is_vip = true;
                 this.params.vip_type = 1;
             }
-            
+
             return tdata;
         }
-        catch(error){
-            if(error.name === 'TimeoutError' && retries > 0){
+        catch (error) {
+            if (error.name === 'TimeoutError' && retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return await this.updateAppData(customPath, retries - 1);
             }
             const errorPrefix = '[ERROR] Failed to update jsToken:';
-            if(error.name === 'TimeoutError'){
+            if (error.name === 'TimeoutError') {
                 console.error(errorPrefix, error.message);
                 return;
             }
@@ -573,18 +573,18 @@ class TeraBoxApp {
             console.error(errorPrefix, errorReturn);
         }
     }
-    
+
     /**
      * Sets default VIP parameters
      * @returns {void}
      */
-    setVipDefaults(){
+    setVipDefaults() {
         this.params.is_vip = true;
         this.params.vip_type = 1; // 1: VIP, 2: SVIP
         this.params.space_total = Math.pow(1024, 3) * 2;
         this.params.space_available = Math.pow(1024, 3) * 2;
     }
-    
+
     /**
      * Makes an API request with retry logic
      * @param {string} req_url - The request URL (relative to whost)
@@ -594,23 +594,23 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if all retries fail
      */
-    async doReq(req_url, req_options = {}, retries = 4){
+    async doReq(req_url, req_options = {}, retries = 4) {
         const url = new URL(this.params.whost + req_url);
         let reqm_options = structuredClone(req_options);
         let req_headers = {};
-        
-        if(reqm_options.headers){
+
+        if (reqm_options.headers) {
             req_headers = reqm_options.headers;
             delete reqm_options.headers;
         }
-        
+
         const save_cookies = reqm_options.save_cookies;
         delete reqm_options.save_cookies;
         const silent_retry = reqm_options.silent_retry;
         delete reqm_options.silent_retry;
         const req_timeout = reqm_options.timeout ? reqm_options.timeout : this.TERABOX_TIMEOUT;
         delete reqm_options.timeout;
-        
+
         try {
             const options = {
                 headers: {
@@ -621,28 +621,28 @@ class TeraBoxApp {
                 ...reqm_options,
                 signal: AbortSignal.timeout(req_timeout),
             };
-            
+
             const req = await request(url, options);
-            
-            if(save_cookies && req.headers['set-cookie']){
+
+            if (save_cookies && req.headers['set-cookie']) {
                 const cJar = new CookieJar();
                 this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
-                if(typeof req.headers['set-cookie'] === 'string'){
+                if (typeof req.headers['set-cookie'] === 'string') {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
-                for(const cookie of req.headers['set-cookie']){
+                for (const cookie of req.headers['set-cookie']) {
                     cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 this.params.cookie = cJar.getCookiesSync(this.params.whost).map(cookie => cookie.cookieString()).join('; ');
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
-        catch(error){
+        catch (error) {
             if (retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                if(!silent_retry){
+                if (!silent_retry) {
                     console.error('[ERROR] DoReq:', req_url, '|', error.code, ':', error.message, '(retrying...)');
                 }
                 return await this.doReq(req_url, req_options, retries - 1);
@@ -650,14 +650,14 @@ class TeraBoxApp {
             throw new Error('doReq', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves system configuration from the TeraBox API
      * @returns {Promise<Object>} The system configuration JSON data
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getSysCfg(){
+    async getSysCfg() {
         const url = new URL(this.params.whost + '/api/getsyscfg');
         url.search = new URLSearchParams({
             clienttype: this.params.app.clienttype,
@@ -665,8 +665,8 @@ class TeraBoxApp {
             cfg_category_keys: '[]',
             version: 0,
         });
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -674,29 +674,29 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
-        catch(error){
+        catch (error) {
             throw new Error('getSysCfg', { cause: error });
         }
     }
-    
+
     /**
      * Checks login status of the current session.
      * @returns {Promise<CheckLoginResponse>} The login status JSON data.
      * @throws {Error} Throws error if HTTP status is not 200 or request fails.
      * @async
      */
-    async checkLogin(){
+    async checkLogin() {
         const url = new URL(this.params.whost + '/api/check/login');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -704,30 +704,30 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const regionPrefix = req.headers['region-domain-prefix'];
-            if(regionPrefix){
+            if (regionPrefix) {
                 const newHostname = `https://${regionPrefix}.${this.TERABOX_DOMAIN}`;
                 console.warn(`[WARN] Default hostname changed to ${newHostname}`);
                 this.params.whost = new URL(newHostname).origin;
                 return await this.checkLogin();
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 0){
+            if (rdata.errno === 0) {
                 this.params.account_id = rdata.uk;
             }
             return rdata;
         }
-        catch(error){
+        catch (error) {
             throw new Error('checkLogin', { cause: error });
         }
     }
-    
+
     /**
      * Initiates the pre-login step for passport authentication
      * @param {string} email - The user's email address
@@ -735,22 +735,22 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async passportPreLogin(email){
+    async passportPreLogin(email) {
         const url = new URL(this.params.whost + '/passport/prelogin');
         const authUrl = 'wap/outlogin/login';
-        
-        try{
-            if(this.data.pcftoken === ''){
+
+        try {
+            if (this.data.pcftoken === '') {
                 await this.updateAppData(authUrl);
             }
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
             formData.append('clientfrom', 'h5');
             formData.append('pcftoken', this.data.pcftoken);
             formData.append('email', email);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 headers: {
@@ -762,11 +762,11 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -774,7 +774,7 @@ class TeraBoxApp {
             throw new Error('passportPreLogin', { cause: error });
         }
     }
-    
+
     /**
      * Completes the passport login process using preLoginData and password
      * @param {Object} preLoginData - Data returned from passportPreLogin
@@ -787,21 +787,21 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async passportLogin(preLoginData, email, pass){
+    async passportLogin(preLoginData, email, pass) {
         const url = new URL(this.params.whost + '/passport/login');
-        
-        try{
-            if(this.data.pubkey === ''){
+
+        try {
+            if (this.data.pubkey === '') {
                 await this.getPublicKey();
             }
-            
+
             const cJar = new CookieJar();
             this.params.cookie.split(';').map(cookie => cJar.setCookieSync(cookie, this.params.whost));
             const browserid = cJar.toJSON().cookies.find(c => c.key === 'browserid').value || '';
             const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
-            
+
             const prand = this.PRandGen('web', preLoginData.seval, encpwd, email, browserid, preLoginData.random);
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
@@ -813,7 +813,7 @@ class TeraBoxApp {
             formData.append('seval', preLoginData.seval);
             formData.append('random', preLoginData.random);
             formData.append('timestamp', preLoginData.timestamp);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 headers: {
@@ -825,17 +825,17 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.code === 0){
-                if(typeof req.headers['set-cookie'] === 'string'){
+            if (rdata.code === 0) {
+                if (typeof req.headers['set-cookie'] === 'string') {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
-                for(const cookie of req.headers['set-cookie']){
+                for (const cookie of req.headers['set-cookie']) {
                     cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
@@ -847,7 +847,7 @@ class TeraBoxApp {
             throw new Error('passportLogin', { cause: error });
         }
     }
-    
+
     /**
      * Sends a registration code to the specified email
      * @param {string} email - The email address to send the code to
@@ -855,22 +855,22 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async regSendCode(email){
+    async regSendCode(email) {
         const url = new URL(this.params.whost + '/passport/register_v4/sendcode');
         const emailRegUrl = 'wap/outlogin/emailRegister';
-        
-        try{
-            if(this.data.pcftoken === ''){
+
+        try {
+            if (this.data.pcftoken === '') {
                 await this.updateAppData(emailRegUrl);
             }
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
             formData.append('clientfrom', 'h5');
             formData.append('pcftoken', this.data.pcftoken);
             formData.append('email', email);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 headers: {
@@ -881,11 +881,11 @@ class TeraBoxApp {
                 },
                 body: formData.str(),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.code: 0 - OK
             // rdata.code: 10 - Email format invalid
@@ -897,7 +897,7 @@ class TeraBoxApp {
             throw new Error('regSendCode', { cause: error });
         }
     }
-    
+
     /**
      * Verifies the registration code received via email
      * @param {string} regToken - Registration token from send code response
@@ -906,10 +906,10 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async regVerify(regToken, code){
+    async regVerify(regToken, code) {
         const url = new URL(this.params.whost + '/passport/register_v4/verify');
-        
-        try{
+
+        try {
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
@@ -917,7 +917,7 @@ class TeraBoxApp {
             formData.append('pcftoken', this.data.pcftoken);
             formData.append('token', regToken);
             formData.append('code', code);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 headers: {
@@ -928,11 +928,11 @@ class TeraBoxApp {
                 },
                 body: formData.str(),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.code: 0 - OK
             // rdata.code: 59 - Email code is wrong
@@ -942,7 +942,7 @@ class TeraBoxApp {
             throw new Error('regVerify', { cause: error });
         }
     }
-    
+
     /**
      * Completes the registration process by setting a password
      * @param {string} regToken - Registration token from verification step
@@ -951,20 +951,20 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async regFinish(regToken, pass){
+    async regFinish(regToken, pass) {
         const url = new URL(this.params.whost + '/passport/register_v4/finish');
-        
-        try{
-            if(this.data.pubkey === ''){
+
+        try {
+            if (this.data.pubkey === '') {
                 await this.getPublicKey();
             }
-            
-            if(typeof pass !== 'string' || pass.length < 6 || pass.length > 15 || !pass.match(/[a-z]/i)){
+
+            if (typeof pass !== 'string' || pass.length < 6 || pass.length > 15 || !pass.match(/[a-z]/i)) {
                 return { code: -2, logid: 0, msg: 'invalid password', };
             }
-            
+
             const encpwd = this.ChangeBase64Type(this.EncryptRSA(pass, this.data.pubkey, 2));
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('client', 'web');
             formData.append('pass_version', '2.8');
@@ -972,7 +972,7 @@ class TeraBoxApp {
             formData.append('pcftoken', this.data.pcftoken);
             formData.append('token', regToken);
             formData.append('pwd', encpwd);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 headers: {
@@ -983,22 +983,22 @@ class TeraBoxApp {
                 },
                 body: formData.str(),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.code === 0 && req.headers['set-cookie']){
+            if (rdata.code === 0 && req.headers['set-cookie']) {
                 const cJar = new CookieJar();
-                
-                if(typeof req.headers['set-cookie'] === 'string'){
+
+                if (typeof req.headers['set-cookie'] === 'string') {
                     req.headers['set-cookie'] = [req.headers['set-cookie']];
                 }
-                for(const cookie of req.headers['set-cookie']){
+                for (const cookie of req.headers['set-cookie']) {
                     cJar.setCookieSync(cookie.split('; ')[0], this.params.whost);
                 }
-                
+
                 const ndus = cJar.toJSON().cookies.find(c => c.key === 'ndus').value;
                 rdata.data.ndus = ndus;
             }
@@ -1008,17 +1008,17 @@ class TeraBoxApp {
             throw new Error('regFinish', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves passport user information for the current session
      * @returns {Promise<Object>} The passport user info JSON (includes display_name)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async passportGetInfo(){
+    async passportGetInfo() {
         const url = new URL(this.params.whost + '/passport/get_info');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1026,13 +1026,13 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 0){
+            if (rdata.errno === 0) {
                 this.params.account_name = rdata.data.display_name;
             }
             return rdata;
@@ -1041,20 +1041,20 @@ class TeraBoxApp {
             throw new Error('getPassport', { cause: error });
         }
     }
-    
+
     /**
      * Fetches membership information for the current user
      * @returns {Promise<Object>} The membership JSON (includes VIP status)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async userMembership(){
+    async userMembership() {
         const url = new URL(this.params.whost + '/rest/2.0/membership/proxy/user');
         url.search = new URLSearchParams({
             method: 'query',
         });
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1062,40 +1062,40 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.error_code === 0){
+            if (rdata.error_code === 0) {
                 this.params.is_vip = rdata.data.member_info.is_vip > 0 ? true : false;
                 // this.params.vip_type = this.params.is_vip ? 2 : 0;
-                if(this.params.is_vip === 0){
+                if (this.params.is_vip === 0) {
                     this.params.vip_type = 0;
                 }
             }
             return rdata;
         }
-        catch(error){
+        catch (error) {
             throw new Error('userMembership', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves current user information (username, VIP status)
      * @returns {Promise<Object>} The user info JSON (includes records array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getCurrentUserInfo(){
-        try{
-            if(this.params.account_id === 0){
+    async getCurrentUserInfo() {
+        try {
+            if (this.params.account_id === 0) {
                 await this.checkLogin();
             }
-            
+
             const curUser = await this.getUserInfo(this.params.account_id);
-            if(curUser.records.length > 0){
+            if (curUser.records.length > 0) {
                 const thisUser = curUser.records[0];
                 this.params.account_name = thisUser.uname;
                 this.params.is_vip = thisUser.vip_type > 0 ? true : false;
@@ -1107,7 +1107,7 @@ class TeraBoxApp {
             throw new Error('getCurrentUserInfo', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves information for a specific user ID
      * @param {number|string} user_id - The user ID to look up
@@ -1115,7 +1115,7 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if user_id is invalid, HTTP status is not 200, or request fails
      */
-    async getUserInfo(user_id){
+    async getUserInfo(user_id) {
         user_id = parseInt(user_id);
         const url = new URL(this.params.whost + '/api/user/getinfo');
         url.search = new URLSearchParams({
@@ -1123,12 +1123,12 @@ class TeraBoxApp {
             need_relation: 0,
             need_secret_info: 1,
         });
-        
-        try{
-            if(isNaN(user_id) || !Number.isSafeInteger(user_id)){
+
+        try {
+            if (isNaN(user_id) || !Number.isSafeInteger(user_id)) {
                 throw new Error(`${user_id} is not user id`);
             }
-            
+
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1136,11 +1136,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1148,21 +1148,21 @@ class TeraBoxApp {
             throw new Error('getUserInfo', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves storage quota information for the current account
      * @returns {Promise<Object>} The quota JSON (includes total, used, available)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getQuota(){
+    async getQuota() {
         const url = new URL(this.params.whost + '/api/quota');
         url.search = new URLSearchParams({
             checkexpire: 1,
             checkfree: 1,
         });
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1170,13 +1170,13 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 0){
+            if (rdata.errno === 0) {
                 rdata.available = rdata.total - rdata.used;
                 this.params.space_available = rdata.available;
                 this.params.space_total = rdata.total;
@@ -1188,17 +1188,17 @@ class TeraBoxApp {
             throw new Error('getQuota', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the user's coins count (points)
      * @returns {Promise<Object>} The coins count JSON (includes records of coin usage)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getCoinsCount(){
+    async getCoinsCount() {
         const url = new URL(this.params.whost + '/rest/1.0/inte/system/getrecord');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1206,11 +1206,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1218,7 +1218,7 @@ class TeraBoxApp {
             throw new Error('getCoinsCount', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the contents of a remote directory
      * @param {string} remoteDir - Remote directory path to list
@@ -1227,10 +1227,10 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getRemoteDir(remoteDir, page = 1){
+    async getRemoteDir(remoteDir, page = 1) {
         const url = new URL(this.params.whost + '/api/list');
-        
-        try{
+
+        try {
             const formData = new this.FormUrlEncoded();
             formData.append('order', 'name');
             formData.append('desc', 0);
@@ -1238,7 +1238,7 @@ class TeraBoxApp {
             formData.append('num', 20000);
             formData.append('page', page);
             formData.append('showempty', 0);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1249,11 +1249,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1261,7 +1261,7 @@ class TeraBoxApp {
             throw new Error('getRemoteDir', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the contents of a remote directory with specific file category
      * @param {number} [categoryId=1] - selected category:
@@ -1278,10 +1278,10 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getCategoryList(categoryId = 1, remoteDir = '/', page = 1, order = 'name', desc = 0, num = 20000){
+    async getCategoryList(categoryId = 1, remoteDir = '/', page = 1, order = 'name', desc = 0, num = 20000) {
         const url = new URL(this.params.whost + '/api/categorylist');
-        
-        try{
+
+        try {
             const formData = new this.FormUrlEncoded();
             formData.append('order', order);
             formData.append('desc', desc);
@@ -1289,7 +1289,7 @@ class TeraBoxApp {
             formData.append('num', num);
             formData.append('page', page);
             formData.append('category', categoryId);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1300,11 +1300,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1312,25 +1312,25 @@ class TeraBoxApp {
             throw new Error('getCategoryList', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the contents of the recycle bin
      * @returns {Promise<Object>} The recycle bin listing JSON (includes entries array)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getRecycleBin(page = 1){
+    async getRecycleBin(page = 1) {
         const url = new URL(this.params.whost + '/api/recycle/list');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 // order: 'name',
                 desc: 0,
                 num: 20000,
                 page: page,
             });
-            
-            
+
+
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1338,11 +1338,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1350,21 +1350,21 @@ class TeraBoxApp {
             throw new Error('getRecycleBin', { cause: error });
         }
     }
-    
+
     /**
      * Clears all items in the recycle bin
      * @returns {Promise<Object>} The clear recycle bin response JSON
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async clearRecycleBin(){
+    async clearRecycleBin() {
         const url = new URL(this.params.whost + '/api/recycle/clear');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 'async': 1,
             });
-            
+
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1372,11 +1372,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1384,7 +1384,7 @@ class TeraBoxApp {
             throw new Error('clearRecycleBin', { cause: error });
         }
     }
-    
+
     /**
      * Initiates a precreate request for a file (reserve upload ID and pre-upload checks)
      * @param {Object} data - File data including remote_dir, file, size, upload_id (optional), and hash info
@@ -1401,7 +1401,7 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async precreateFile(data){
+    async precreateFile(data) {
         const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         // formData.append('target_path', data.remote_dir);
@@ -1410,51 +1410,51 @@ class TeraBoxApp {
         formData.append('file_limit_switch_v34', 'true');
         formData.append('block_list', '[]');
         formData.append('rtype', 2);
-        
-        if(data.upload_id && typeof data.upload_id === 'string' && data.upload_id !== ''){
+
+        if (data.upload_id && typeof data.upload_id === 'string' && data.upload_id !== '') {
             formData.append('uploadid', data.upload_id);
         }
-        
+
         // check if has correct md5 values
-        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
+        if (this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)) {
             formData.append('content-md5', data.hash.file);
             formData.append('slice-md5', data.hash.slice);
         }
-        
+
         // check crc32int and ignore field for crc32 out of range
-        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
+        if (Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF) {
             formData.append('content-crc32', data.hash.crc32);
         }
-        
+
         // check chunks hash
-        if(!this.CheckMd5Arr(data.hash.chunks)){
+        if (!this.CheckMd5Arr(data.hash.chunks)) {
             const predefinedHash = ['5910a591dd8fc18c32a8f3df4fdc1761'];
-            
-            if(data.size > 4 * 1024 * 1024){
+
+            if (data.size > 4 * 1024 * 1024) {
                 predefinedHash.push('a5fc157d78e6ad1c7e114b056c92821e');
             }
-            
+
             formData.set('block_list', JSON.stringify(predefinedHash));
         }
-        else{
+        else {
             formData.set('block_list', JSON.stringify(data.hash.chunks));
         }
-        
+
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
-        
+
         const url = new URL(this.params.whost + '/api/precreate');
-        
-        try{
-            if(this.data.jsToken === ''){
+
+        try {
+            if (this.data.jsToken === '') {
                 await this.updateAppData();
             }
-            
+
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
             });
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1465,15 +1465,15 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             // uploadid	= 'P1-' + BASE64(ServerLocalIP + ':' + ServerTime + ':' + RequestID)
             const rdata = await req.body.json();
             // rdata.errno: 4000023 - need verify
-            if(rdata.errno === 4000023){
+            if (rdata.errno === 4000023) {
                 await this.updateAppData();
                 return await this.precreateFile(data);
             }
@@ -1483,7 +1483,7 @@ class TeraBoxApp {
             throw new Error('precreateFile', { cause: error });
         }
     }
-    
+
     /**
      * Attempts a rapid upload using existing file hashes (skip actual upload if file already on server)
      * @param {Object} data - File data including remote_dir, file, size, and hash info
@@ -1499,9 +1499,9 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if file size < 256KB, invalid hashes, HTTP status is not 200, or request fails
      */
-    async rapidUpload(data){
+    async rapidUpload(data) {
         const formData = new this.FormUrlEncoded({
-            path:  makeRemoteFPath(data.remote_dir, data.file),
+            path: makeRemoteFPath(data.remote_dir, data.file),
             //target_path: data.remote_dir
             'content-length': data.size,
             'content-md5': data.hash.file,
@@ -1513,29 +1513,29 @@ class TeraBoxApp {
             rtype: 2,
             mode: 1,
         });
-        
-        if(!this.CheckMd5Val(data.hash.slice) || !this.CheckMd5Val(data.hash.file)){
+
+        if (!this.CheckMd5Val(data.hash.slice) || !this.CheckMd5Val(data.hash.file)) {
             const badMD5 = new Error('Bad MD5 Slice Hash or MD5 File Hash');
             throw new Error('rapidUpload', { cause: badMD5 });
         }
-        
-        if(!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || data.hash.crc32 > 0xFFFFFFFF){
+
+        if (!Number.isSafeInteger(data.hash.crc32) || data.hash.crc32 < 0 || data.hash.crc32 > 0xFFFFFFFF) {
             formData.delete('content-crc32');
         }
-        
-        if(!this.CheckMd5Arr(data.hash.chunks)){
+
+        if (!this.CheckMd5Arr(data.hash.chunks)) {
             // use unsafe rapid upload if we don't have chunks hash
             formData.delete('block_list');
             formData.set('rtype', 3);
         }
-        
+
         const url = new URL(this.params.whost + '/api/rapidupload');
-        
-        try{
-            if(data.size < 256 * 1024){
+
+        try {
+            if (data.size < 256 * 1024) {
                 throw new Error('File size too small!');
             }
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1546,11 +1546,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.errno: 2 - already exist?
             return rdata;
@@ -1559,7 +1559,7 @@ class TeraBoxApp {
             throw new Error('rapidUpload', { cause: error });
         }
     }
-    
+
     /**
      * Attempts a upload file from remote server
      * @param {string} urls - Source urls (coma-separated)
@@ -1568,15 +1568,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200, or request fails
      */
-    async remoteUpload(urls, remote_dir = '/Remote Upload'){
+    async remoteUpload(urls, remote_dir = '/Remote Upload') {
         const formData = new this.FormUrlEncoded({
             urls: urls,
             upload_to: remote_dir,
         });
-        
+
         const url = new URL(this.params.whost + '/webmaster/remoteupload/submit');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1587,11 +1587,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1599,16 +1599,16 @@ class TeraBoxApp {
             throw new Error('remoteUpload', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves an upload host endpoint to use for file uploads
      * @returns {Promise<Object>} The upload host response JSON (includes host field)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getUploadHost(){
+    async getUploadHost() {
         const url = new URL(this.params.whost + '/rest/2.0/pcs/file?method=locateupload');
-        try{
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1616,11 +1616,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             this.params.uhost = 'https://' + rdata.host;
             return rdata;
@@ -1629,7 +1629,7 @@ class TeraBoxApp {
             throw new Error('getUploadHost', { cause: error });
         }
     }
-    
+
     /**
      * Uploads a single chunk (part) of a file
      * @param {Object} data - File data including remote_dir, file, upload_id
@@ -1645,7 +1645,7 @@ class TeraBoxApp {
         const timeoutAborter = new AbortController;
         const timeoutId = setTimeout(() => { timeoutAborter.abort(); }, this.TERABOX_TIMEOUT);
         externalAbort = externalAbort ? externalAbort : new AbortController().signal;
-        
+
         const url = new URL(`${this.params.uhost}/rest/2.0/pcs/superfile2`);
         url.search = new URLSearchParams({
             method: 'upload',
@@ -1656,10 +1656,10 @@ class TeraBoxApp {
             // uploadsign: 0,
             partseq: partseq,
         });
-        
+
         const formData = new FormData();
         formData.append('file', blob, 'blob');
-        
+
         const req = await request(url, {
             method: 'POST',
             body: formData,
@@ -1672,13 +1672,13 @@ class TeraBoxApp {
                 timeoutAborter.signal,
             ]),
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (req.statusCode !== 200) {
-            throw new Error(`HTTP error! Status: ${JSON.stringify(req)}`);
+            throw new Error(`HTTP error! Status: ${req.statusCode}`);
         }
-        
+
         const res = await req.body.json();
         if (res.error_code) {
             const uploadError = new Error(`Upload failed! Error Code #${res.error_code}`);
@@ -1687,7 +1687,7 @@ class TeraBoxApp {
         }
         return res;
     }
-    
+
     /**
      * Creates a new directory in the remote file system
      * @param {string} remoteDir - The path of the directory to create
@@ -1695,15 +1695,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async createDir(remoteDir){
+    async createDir(remoteDir) {
         const formData = new this.FormUrlEncoded();
         formData.append('path', remoteDir);
         formData.append('isdir', 1);
         formData.append('block_list', '[]');
-        
+
         const url = new URL(this.params.whost + '/api/create?a=commit');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1714,11 +1714,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.errno: -7 - param  path file name is invalid
             return rdata;
@@ -1727,7 +1727,7 @@ class TeraBoxApp {
             throw new Error('createFolder', { cause: error });
         }
     }
-    
+
     /**
      * Creates a new file entry on the server after uploading chunks
      * @param {Object} data - File data including remote_dir, file, size, hash, upload_id, and chunks
@@ -1744,28 +1744,28 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async createFile(data){
+    async createFile(data) {
         const formData = new this.FormUrlEncoded();
         formData.append('path', makeRemoteFPath(data.remote_dir, data.file));
         // formData.append('isdir', 0);
         formData.append('size', data.size);
         formData.append('isdir', 0);
-        
+
         // check if has correct md5 values
-        if(this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)){
+        if (this.CheckMd5Val(data.hash.slice) && this.CheckMd5Val(data.hash.file)) {
             formData.append('content-md5', data.hash.file);
             formData.append('slice-md5', data.hash.slice);
         }
-        
+
         // check crc32int and ignore field for crc32 out of range
-        if(Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF){
+        if (Number.isSafeInteger(data.hash.crc32) && data.hash.crc32 >= 0 && data.hash.crc32 <= 0xFFFFFFFF) {
             formData.append('content-crc32', data.hash.crc32);
         }
-        
+
         formData.append('block_list', JSON.stringify(data.hash.chunks));;
         formData.append('uploadid', data.upload_id);
         formData.append('rtype', 2);
-        
+
         // formData.append('local_ctime', '');
         // formData.append('local_mtime', '');
         // formData.append('zip_quality', '');
@@ -1773,10 +1773,10 @@ class TeraBoxApp {
         // formData.append('is_revision', 0);
         // formData.append('mode', 2); // 2 is Batch Upload
         // formData.append('exif_info', exifJsonStr);
-        
+
         const url = new URL(this.params.whost + '/api/create');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1787,21 +1787,21 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.errno: 31355 - pcs service failed
-            if(rdata.md5){
+            if (rdata.md5) {
                 // encrypted etag
                 rdata.emd5 = rdata.md5;
                 // decrypted etag (without chunk count)
                 rdata.md5 = this.DecodeMd5(rdata.emd5);
                 // set custom etag
                 rdata.etag = rdata.md5;
-                if(data.hash.chunks.length > 1){
+                if (data.hash.chunks.length > 1) {
                     rdata.etag += '-' + data.hash.chunks.length;
                 }
             }
@@ -1812,7 +1812,7 @@ class TeraBoxApp {
             throw new Error('createFile', { cause: error });
         }
     }
-    
+
     /**
      * Performs file management operations (delete, copy, move, rename)
      * @param {string} operation - Operation type: 'delete', 'copy', 'move', 'rename'
@@ -1821,33 +1821,33 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if fmparams is not an array, HTTP status is not 200, or request fails
      */
-    async filemanager(operation, fmparams){
+    async filemanager(operation, fmparams) {
         // For Delete: ["/path1","path2.rar"]
         // For Move: [{"path":"/myfolder/source.bin","dest":"/target/","newname":"newfilename.bin"}]
         // For Copy same as move
         // + "ondup": newcopy, overwrite (optional, skip by default)
         // For rename [{"id":1111,"path":"/dir1/src.bin","newname":"myfile2.bin"}]
-        
+
         // operation - copy (file copy), move (file movement), rename (file renaming), and delete (file deletion)
         // opera=copy: filelist: [{"path":"/hello/test.mp4","dest":"","newname":"test.mp4"}]
         // opera=move: filelist: [{"path":"/test.mp4","dest":"/test_dir","newname":"test.mp4"}]
         // opera=rename: filelist：[{"path":"/hello/test.mp4","newname":"test_one.mp4"}]
         // opera=delete: filelist: ["/test.mp4"]
-        
-        if(!Array.isArray(fmparams)){
+
+        if (!Array.isArray(fmparams)) {
             throw new Error('filemanager', { cause: new Error('FS paths should be in array!') });
         }
-        
+
         const url = new URL(this.params.whost + '/api/filemanager');
-        
+
         const formData = new this.FormUrlEncoded();
         formData.append('filelist', JSON.stringify(fmparams));
-        
-        try{
-            if(this.data.jsToken === ''){
+
+        try {
+            if (this.data.jsToken === '') {
                 await this.updateAppData();
             }
-            
+
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
@@ -1855,7 +1855,7 @@ class TeraBoxApp {
                 onnest: 'fail',
                 opera: operation, // delete, copy, move, rename
             });
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -1866,13 +1866,13 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 450016){
+            if (rdata.errno === 450016) {
                 await this.updateAppData();
                 return await this.filemanager(operation, fmparams);
             }
@@ -1882,23 +1882,23 @@ class TeraBoxApp {
             throw new Error('filemanager', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves a list of shares created by the user
      * @returns {Promise<Object>} The share list JSON (includes share entries)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shareList(page = 1){
+    async shareList(page = 1) {
         const url = new URL(this.params.whost + '/share/teratransfer/sharelist');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 // ...this.params.app,
                 page_size: 100,
                 page: page,
             });
-            
+
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -1906,7 +1906,7 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1914,7 +1914,7 @@ class TeraBoxApp {
             throw new Error('shareList', { cause: error });
         }
     }
-    
+
     /**
      * Sets sharing parameters (e.g., password, expiration) for specified files
      * @param {Array<string>} filelist - Array of file paths to share
@@ -1924,31 +1924,31 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shareSet(filelist, pass = '', period = 0){
+    async shareSet(filelist, pass = '', period = 0) {
         const url = new URL(this.params.whost + '/share/pset');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 // ...this.params.app,
             });
-            
+
             filelist = Array.isArray(filelist) ? filelist : [];
             filelist = JSON.stringify(filelist);
-            
+
             pass = typeof pass === 'string' && pass.match(/^[0-9a-z]{4}$/i) ? pass : '';
             const schannel = pass !== '' ? 4 : 0;
-            
+
             // 0 - infinity, otherwise valid X days
             period = parseInt(period);
             period = !isNaN(period) && Number.isSafeInteger(period) ? period : 0;
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('schannel', schannel);
             formData.append('channel_list', '[]');
             formData.append('period', period);
             formData.append('path_list', filelist);
             formData.append('pwd', pass);
-            
+
             const req = await request(url, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1959,7 +1959,7 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -1967,7 +1967,7 @@ class TeraBoxApp {
             throw new Error('shareSet', { cause: error });
         }
     }
-    
+
     /**
      * Cancels existing shares by share ID
      * @param {Array<number>} [shareid_list=[]] - Array of share IDs to cancel
@@ -1975,20 +1975,20 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shareCancel(shareid_list = []){
+    async shareCancel(shareid_list = []) {
         const url = new URL(this.params.whost + '/share/cancel');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 // ...this.params.app,
             });
-            
+
             shareid_list = Array.isArray(shareid_list) ? shareid_list : [];
             shareid_list = JSON.stringify(shareid_list);
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('shareid_list', shareid_list);
-            
+
             const req = await request(url, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -1999,7 +1999,7 @@ class TeraBoxApp {
                 body: formData.str(),
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2007,7 +2007,7 @@ class TeraBoxApp {
             throw new Error('shareCancel', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves information for a shortened URL share
      * @param {string} shortUrl - The short url: after "surl="
@@ -2015,16 +2015,16 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shortUrlInfo(shortUrl){
+    async shortUrlInfo(shortUrl) {
         const url = new URL(this.params.whost + '/api/shorturlinfo');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 //...this.params.app,
                 shorturl: '1' + shortUrl,
                 root: 1,
             });
-            
+
             const connector = buildConnector({ ciphers: tls.DEFAULT_CIPHERS + ':!ECDHE-RSA-AES128-SHA' });
             const client = new Client(this.params.whost, { connect: connector });
             const req = await request(url, {
@@ -2036,11 +2036,11 @@ class TeraBoxApp {
                 dispatcher: client,
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2048,7 +2048,7 @@ class TeraBoxApp {
             throw new Error('shortUrlInfo', { cause: error });
         }
     }
-    
+
     /**
      * Lists files under a shortened URL share
      * @param {string} shortUrl - The short url: after "surl="
@@ -2058,15 +2058,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shortUrlList(shortUrl, remoteDir = '', page = 1){
+    async shortUrlList(shortUrl, remoteDir = '', page = 1) {
         const url = new URL(this.params.whost + '/share/list');
         remoteDir = remoteDir || '';
-        
-        try{
-            if(this.data.jsToken === ''){
+
+        try {
+            if (this.data.jsToken === '') {
                 await this.updateAppData();
             }
-            
+
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
@@ -2077,11 +2077,11 @@ class TeraBoxApp {
                 dir: remoteDir,
                 page: page,
             });
-        
-            if(remoteDir === ''){
+
+            if (remoteDir === '') {
                 url.searchParams.append('root', '1');
             }
-            
+
             const connector = buildConnector({ ciphers: tls.DEFAULT_CIPHERS + ':!ECDHE-RSA-AES128-SHA' });
             const client = new Client(this.params.whost, { connect: connector });
             const req = await request(url, {
@@ -2093,14 +2093,14 @@ class TeraBoxApp {
                 dispatcher: client,
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // rdata.errno: 4000020 - need verify
-            if(rdata.errno === 4000020){
+            if (rdata.errno === 4000020) {
                 await this.updateAppData();
                 return await this.shortUrlList(shortUrl, remoteDir, page);
             }
@@ -2110,21 +2110,21 @@ class TeraBoxApp {
             throw new Error('shortUrlList', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves file difference (delta) information for synchronization
      * @returns {Promise<Object>} The file diff JSON (includes entries, request_id, has_more flag)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200, request fails, or on recursive errors
      */
-    async fileDiff(){
+    async fileDiff() {
         const formData = new this.FormUrlEncoded();
         formData.append('cursor', this.params.cursor);
-        if(this.params.cursor === 'null'){
+        if (this.params.cursor === 'null') {
             formData.append('c', 'full');
         }
         formData.append('action', 'manual');
-        
+
         const url = new URL(this.params.whost + '/api/filediff');
         url.search = new URLSearchParams({
             ...this.params.app,
@@ -2136,8 +2136,8 @@ class TeraBoxApp {
             // lang: this.params.lang,
             // logid: '',
         });
-        
-        try{
+
+        try {
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2148,21 +2148,21 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 0){
+            if (rdata.errno === 0) {
                 this.params.cursor = rdata.cursor;
-                if(!Array.isArray(rdata.request_id)){
-                    rdata.request_id = [ rdata.request_id ];
+                if (!Array.isArray(rdata.request_id)) {
+                    rdata.request_id = [rdata.request_id];
                 }
-                if(rdata.has_more){
+                if (rdata.has_more) {
                     // Extra FileDiff request...
                     const rFileDiff = await this.fileDiff();
-                    if(rFileDiff.errno === 0){
+                    if (rFileDiff.errno === 0) {
                         rdata.reset = rFileDiff.reset;
                         rdata.request_id = rdata.request_id.concat(rFileDiff.request_id);
                         rdata.entries = Object.assign({}, rdata.entries, rFileDiff.entries);
@@ -2177,23 +2177,23 @@ class TeraBoxApp {
             throw new Error('fileDiff', { cause: error });
         }
     }
-    
+
     /**
      * Generates a PAN token for subsequent API requests
      * @returns {Promise<Object>} The PAN token response JSON (includes pan token and expire)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async genPanToken(){
+    async genPanToken() {
         const url = new URL(this.params.whost + '/api/pantoken');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 ...this.params.app,
                 lang: this.params.lang,
                 u: 'https://www.terabox.com',
             });
-            
+
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -2201,11 +2201,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2213,17 +2213,17 @@ class TeraBoxApp {
             throw new Error('genPanToken', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves home page information (user info, sign data)
      * @returns {Promise<Object>} The home info JSON (includes sign1, sign3, data.signb)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getHomeInfo(){
+    async getHomeInfo() {
         const url = new URL(this.params.whost + '/api/home/info');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 headers: {
                     'User-Agent': this.params.ua,
@@ -2231,13 +2231,13 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            if(rdata.errno === 0){
+            if (rdata.errno === 0) {
                 rdata.data.signb = this.SignDownload(rdata.data.sign3, rdata.data.sign1);
             }
             return rdata;
@@ -2246,7 +2246,7 @@ class TeraBoxApp {
             throw new Error('getHomeInfo', { cause: error });
         }
     }
-    
+
     /**
      * Initiates a download request for specified file IDs
      * @param {Array<number>} fs_ids - Array of file system IDs to download
@@ -2255,15 +2255,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async download(fs_ids){
+    async download(fs_ids) {
         const url = new URL(this.params.whost + '/api/download');
-        
-        try{
+
+        try {
             const homeInfo = await this.getHomeInfo();
-            if(homeInfo.errno !== 0){
+            if (homeInfo.errno !== 0) {
                 throw new Error('API error! Bad HomeInfo response');
             }
-            
+
             const formData = new this.FormUrlEncoded({
                 fidlist: JSON.stringify(fs_ids),
                 type: 'dlink',
@@ -2272,7 +2272,7 @@ class TeraBoxApp {
                 timestamp: homeInfo.data.timestamp,
                 need_speed: 1, // Premium speed?..
             });
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2283,11 +2283,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2295,7 +2295,7 @@ class TeraBoxApp {
             throw new Error('download', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the streaming contents of a remote file
      * @param {string} remotePath - Remote video file
@@ -2311,15 +2311,15 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getStream(remotePath = '/video.mp4', type = 'M3U8_AUTO_480'){
+    async getStream(remotePath = '/video.mp4', type = 'M3U8_AUTO_480') {
         const url = new URL(this.params.whost + '/api/streaming');
-        
-        try{
+
+        try {
             const formData = new this.FormUrlEncoded();
             formData.append('path', remotePath);
             formData.append('type', type);
             formData.append('vip', 2);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2330,11 +2330,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2342,7 +2342,7 @@ class TeraBoxApp {
             throw new Error('getStream', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves metadata for specified remote files
      * @param {Array<Object>} remote_file_list - Array of file descriptor objects { fs_id, path, etc. }
@@ -2350,16 +2350,16 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getFileMeta(remote_file_list){
+    async getFileMeta(remote_file_list) {
         const url = new URL(this.params.whost + '/api/filemetas');
-        
-        try{
+
+        try {
             const formData = new this.FormUrlEncoded({
                 dlink: 1,
                 origin: 'dlna',
                 target: JSON.stringify(remote_file_list),
             });
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2370,11 +2370,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2382,7 +2382,7 @@ class TeraBoxApp {
             throw new Error('getFileMeta', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves a list of recent uploads for the account
      * @param {number} [page=1] - Page number for pagination
@@ -2390,17 +2390,17 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getRecentUploads(page = 1){
+    async getRecentUploads(page = 1) {
         const url = new URL(this.params.whost + '/rest/recent/listall');
-        
-        try{
+
+        try {
             url.search = new URLSearchParams({
                 ...this.params.app,
-                version:  this.params.ver_android,
+                version: this.params.ver_android,
                 // num: 20000, ???
                 // page: page, // ???
             });
-            
+
             const req = await request(url, {
                 method: 'GET',
                 headers: {
@@ -2409,11 +2409,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2421,7 +2421,7 @@ class TeraBoxApp {
             throw new Error('getRecentUploads', { cause: error });
         }
     }
-    
+
     /**
      * Queries transfer information for a shared URL
      * <br>
@@ -2434,25 +2434,25 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async querySurlTransfer(shareId, fromUk){
+    async querySurlTransfer(shareId, fromUk) {
         const url = new URL(this.params.whost + '/share/querysurltransfer');
-        
-        try{
-            if(this.data.jsToken === ''){
+
+        try {
+            if (this.data.jsToken === '') {
                 await this.updateAppData();
             }
-            
+
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
                 'dp-logid': this.data.logid,
                 bdstoken: this.data.bdstoken,
             });
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('sid', shareId);
             formData.append('suk', fromUk);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2464,11 +2464,11 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             return rdata;
         }
@@ -2476,7 +2476,7 @@ class TeraBoxApp {
             throw new Error('querySurlTransfer', { cause: error });
         }
     }
-    
+
     /**
      * Transfers (saves) shared files to the user's account
      * <br>
@@ -2493,14 +2493,14 @@ class TeraBoxApp {
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async shareTransfer(shareId, fromUk, fsIds, destPath = '/', options = {}){
+    async shareTransfer(shareId, fromUk, fsIds, destPath = '/', options = {}) {
         const url = new URL(this.params.whost + '/share/transfer');
-        
-        try{
-            if(this.data.jsToken === ''){
+
+        try {
+            if (this.data.jsToken === '') {
                 await this.updateAppData();
             }
-            
+
             url.search = new URLSearchParams({
                 ...this.params.app,
                 jsToken: this.data.jsToken,
@@ -2510,11 +2510,11 @@ class TeraBoxApp {
                 shareid: shareId,
                 from: fromUk,
             });
-            
+
             const formData = new this.FormUrlEncoded();
             formData.append('fsidlist', JSON.stringify(fsIds));
             formData.append('path', destPath);
-            
+
             const req = await request(url, {
                 method: 'POST',
                 body: formData.str(),
@@ -2526,14 +2526,14 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
             // Handle verification errors by refreshing token and retrying
-            if(rdata.errno === 400810){
+            if (rdata.errno === 400810) {
                 await this.updateAppData();
                 return await this.shareTransfer(shareId, fromUk, fsIds, destPath, options);
             }
@@ -2543,17 +2543,17 @@ class TeraBoxApp {
             throw new Error('shareTransfer', { cause: error });
         }
     }
-    
+
     /**
      * Retrieves the RSA public key from the server for encryption
      * @returns {Promise<Object>} The public key response JSON (includes pp1 and pp2)
      * @async
      * @throws {Error} Throws error if HTTP status is not 200 or request fails
      */
-    async getPublicKey(){
+    async getPublicKey() {
         const url = new URL(this.params.whost + '/passport/getpubkey');
-        
-        try{
+
+        try {
             const req = await request(url, {
                 method: 'GET',
                 headers: {
@@ -2561,17 +2561,17 @@ class TeraBoxApp {
                 },
                 signal: AbortSignal.timeout(this.TERABOX_TIMEOUT),
             });
-            
+
             if (req.statusCode !== 200) {
                 throw new Error(`HTTP error! Status: ${req.statusCode}`);
             }
-            
+
             const rdata = await req.body.json();
-            
-            if(rdata.code === 0){
+
+            if (rdata.code === 0) {
                 this.data.pubkey = this.DecryptAES(rdata.data.pp1, rdata.data.pp2);
             }
-            
+
             return rdata;
         }
         catch (error) {
