@@ -393,7 +393,7 @@ declare module "@chahakshah/terabox-api" {
     getSysCfg(): Promise<any>;
     checkLogin(): Promise<CheckLogin>;
     passportPreLogin(email: string): Promise<PassportPreLogin>;
-    passportLogin(preLoginData: any, email: string, pass: string): Promise<any>;
+    passportLogin(preLoginData: any, email: string, pass: string): Promise<PassportLogin>;
     regSendCode(email: string): Promise<any>;
     regVerify(regToken: string, code: string | number): Promise<any>;
     regFinish(regToken: string, pass: string): Promise<any>;
