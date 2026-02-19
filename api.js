@@ -427,7 +427,7 @@ class TeraBoxApp {
     
     // Constants
     TERABOX_DOMAIN = 'terabox.com';
-    TERABOX_TIMEOUT = 10000;
+    TERABOX_TIMEOUT = 20000;
     
     // app data
     data = {
