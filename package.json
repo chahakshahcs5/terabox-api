@@ -1,7 +1,7 @@
 {
   "name": "@chahakshah/terabox-api",
   "name_ext": "TeraBox API",
-  "version": "2.6.8",
+  "version": "2.6.9",
   "main": "api.js",
   "type": "module",
   "scripts": {

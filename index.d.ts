@@ -195,6 +195,31 @@ declare module "@chahakshah/terabox-api" {
     timestamp: number;
   }
 
+  export interface PassportLogin {
+    code: number;
+    data: PassportLoginData;
+    logid: number;
+    msg: string;
+  }
+
+  export interface PassportLoginData {
+    cur_country: string,
+    displayName: string,
+    headUrl: string,
+    need_protect: number,
+    reg_country: string,
+    reg_time: number,
+    region_domain_prefix: string,
+    url_domain_prefix: string,
+    ndus: string
+  }
+
+  export interface PassportLoginError {
+    request_id: number;
+    code: number;
+    errmsg: string;
+  }
+
   export interface RemoteDirectory {
     errno: number;
     guid_info: string;
